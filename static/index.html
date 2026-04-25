@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="朝活・スキル学習をdポイントに変換する成長可視化型ポイ活アプリ。AIが学習を証明し、努力がポイントに変わる。">
+  <title>GrowthPoint – 成長可視化型ポイ活</title>
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <link rel="stylesheet" href="css/styles.css">
+  <!-- Firebase SDKs are imported in js/firebase.js -->
+  <script type="importmap">
+    {
+      "imports": {
+        "@google/generative-ai": "https://esm.run/@google/generative-ai"
+      }
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ===== LOGIN SCREEN ===== -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <div class="login-card__logo">
+        <img src="assets/logo.png" alt="GrowthPoint Logo" style="width: 120px; height: 120px; margin-bottom: 16px;">
+        <div>GrowthPoint</div>
+      </div>
+      <p class="login-card__subtitle">学びをポイントに。努力を報酬に。</p>
+      <div style="font-size: 4rem; margin-bottom: 24px;">🚀</div>
+      <p style="color: var(--color-text-secondary); font-size: 0.85rem; margin-bottom: 32px; line-height: 1.7;">
+        朝活やスキル学習を記録して<br>ポイントを貯めてdポイントに交換
+      </p>
+      <button id="btn-login" class="btn btn--google btn--lg">
+        <svg width="20" height="20" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Googleでログイン
+      </button>
+      <button id="btn-demo" class="btn btn--secondary btn--full" style="margin-top: 12px;">
+        ▶ デモモードで体験
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== MAIN APP ===== -->
+  <div id="app" style="display: none;">
+
+    <!-- Navbar -->
+    <nav class="navbar" id="navbar">
+      <div class="container navbar__inner">
+        <div class="navbar__logo">
+          <img src="assets/logo.png" alt="Logo" style="width: 24px; height: 24px; margin-right: 8px;">
+          <span class="navbar__logo-text">GrowthPoint</span><span> β</span>
+        </div>
+        <div class="navbar__user">
+          <div class="navbar__points" id="navbar-points">
+            <span class="navbar__points-icon">💎</span>
+            <span id="nav-total-points">0</span> pt
+          </div>
+          <div class="navbar__avatar" id="user-avatar" style="background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">
+            👤
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero container">
+      <p class="hero__greeting" id="greeting">おはようございます 🌅</p>
+      <h1 class="hero__title">
+        今日も<span class="hero__title-accent">進化</span>を続けよう
+      </h1>
+      <p style="color: var(--color-text-secondary); margin-top: -16px; margin-bottom: 32px; font-size: 0.9rem;">GrowthPoint 2.0: Evolution System</p>
+    </section>
+
+    <!-- Stats Grid -->
+    <section class="container">
+      <div class="stats-grid">
+        <div class="stat-card stat-card--points animate-fade-in">
+          <div class="stat-card__icon">💎</div>
+          <div class="stat-card__value" id="stat-points">0</div>
+          <div class="stat-card__label">累計ポイント</div>
+        </div>
+        <div class="stat-card stat-card--streak animate-fade-in">
+          <div class="stat-card__icon">🔥</div>
+          <div class="stat-card__value" id="stat-streak">0</div>
+          <div class="stat-card__label">連続日数</div>
+        </div>
+        <div class="stat-card stat-card--study animate-fade-in">
+          <div class="stat-card__icon">⏱️</div>
+          <div class="stat-card__value" id="stat-today-minutes">0</div>
+          <div class="stat-card__label">今日の学習（分）</div>
+        </div>
+        <div class="stat-card stat-card--level animate-fade-in">
+          <div class="stat-card__icon">⭐</div>
+          <div class="stat-card__value" id="stat-level">Lv.1</div>
+          <div class="stat-card__label" id="stat-level-title">ビギナー</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Level Progress -->
+    <section class="container" style="margin-top: -16px; margin-bottom: 32px;">
+      <div class="progress-bar">
+        <div class="progress-bar__fill" id="level-progress" style="width: 0%"></div>
+      </div>
+      <p style="text-align: center; font-size: 0.8rem; color: var(--color-text-muted); margin-top: 8px;" id="level-progress-text">
+        次のレベルまで 100 pt
+      </p>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="container">
+      <h2 class="section-title">⚡ クイックアクション</h2>
+      <div class="actions-grid">
+        <div class="action-card" id="action-morning">
+          <div class="action-card__icon">🌅</div>
+          <div class="action-card__title">朝活チェックイン</div>
+          <div class="action-card__desc">起床時間を記録して早起きボーナスをゲット！</div>
+          <div class="action-card__reward">💎 最大 +10pt</div>
+        </div>
+        <div class="action-card" id="action-study">
+          <div class="action-card__icon">📖</div>
+          <div class="action-card__title">学習を記録する</div>
+          <div class="action-card__desc">学習内容と時間を記録。AIが学習を証明します。</div>
+          <div class="action-card__reward">💎 時間 + AIボーナス</div>
+        </div>
+        <div class="action-card" id="action-exchange">
+          <div class="action-card__icon">🎁</div>
+          <div class="action-card__title">ポイントを交換</div>
+          <div class="action-card__desc">貯めたポイントをdポイントに交換申請。</div>
+          <div class="action-card__reward">100pt → 50 dポイント</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Weekly Chart -->
+    <section class="container">
+      <h2 class="section-title">📊 今週の学習記録</h2>
+      <div class="chart-container">
+        <canvas id="weekly-chart"></canvas>
+      </div>
+    </section>
+
+    <!-- Missions -->
+    <section class="container">
+      <h2 class="section-title">🎯 ミッション</h2>
+      <div class="missions-list" id="missions-list">
+        <!-- JS にて動的生成 -->
+      </div>
+    </section>
+
+    <!-- Point Exchange -->
+    <section class="container exchange-section">
+      <h2 class="section-title">🔄 dポイント交換</h2>
+      <div class="exchange-card">
+        <div class="exchange-card__info">
+          <div class="exchange-card__title">アプリ内ポイント → dポイント</div>
+          <div class="exchange-card__desc">
+            貯めたポイントを申請すると、dポイントプリペイド番号をお送りします。<br>
+            最低100ポイントから交換可能です。
+          </div>
+          <div class="exchange-card__rate">
+            <span>交換レート:</span>
+            <span class="exchange-card__rate-value">100 pt = 50 dポイント</span>
+          </div>
+        </div>
+        <button class="btn btn--primary btn--lg" id="btn-exchange">交換申請</button>
+      </div>
+    </section>
+
+    <!-- Recent Activity -->
+    <section class="container" style="padding-bottom: 80px;">
+      <h2 class="section-title">📋 最近のアクティビティ</h2>
+      <div id="activity-list" class="missions-list">
+        <!-- JS にて動的生成 -->
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ===== MODALS ===== -->
+
+  <!-- Morning Check-in Modal -->
+  <div class="modal-overlay" id="modal-morning">
+    <div class="modal">
+      <div class="modal__title">🌅 朝活チェックイン</div>
+      <div class="form-group">
+        <label for="wake-up-time">起床時間</label>
+        <input type="time" id="wake-up-time" value="06:30">
+      </div>
+      <div class="form-group">
+        <label>目標起床時間</label>
+        <input type="time" id="target-wake-time" value="07:00">
+      </div>
+      <div id="morning-result" style="display: none;">
+        <!-- 判定結果をここに表示 -->
+      </div>
+      <div style="display: flex; gap: 12px; margin-top: 24px;">
+        <button class="btn btn--secondary" id="btn-morning-cancel" style="flex:1;">キャンセル</button>
+        <button class="btn btn--primary" id="btn-morning-submit" style="flex:1;">チェックイン</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Study Log Modal -->
+  <div class="modal-overlay" id="modal-study">
+    <div class="modal">
+      <div class="modal__title">📖 学習を記録する</div>
+      <div class="form-group">
+        <label for="study-topic">学習カテゴリ</label>
+        <select id="study-topic">
+          <option value="GCP">Google Cloud</option>
+          <option value="AI">AI / 機械学習</option>
+          <option value="Programming">プログラミング</option>
+          <option value="Data">データエンジニアリング</option>
+          <option value="Business">ビジネス / セールス</option>
+          <option value="English">英語</option>
+          <option value="Other">その他</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="study-duration">学習時間（分）</label>
+        <input type="number" id="study-duration" min="5" max="480" value="30" step="5">
+      </div>
+      <div class="form-group">
+        <label for="study-notes">学習メモ（任意）</label>
+        <textarea id="study-notes" placeholder="何を学んだか簡単にメモ..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>📸 学習の証明（スクリーンショット）</label>
+        <div class="upload-area" id="upload-area" style="position: relative;">
+          <div class="upload-area__icon">📸</div>
+          <div class="upload-area__text">クリックまたはドラッグ＆ドロップ</div>
+          <div class="upload-area__hint">※ ノートやコード画面のスクショをアップロードすると、AIが学習内容を判定します</div>
+          <input type="file" id="study-image" accept="image/*" style="display:none;">
+          
+          <!-- Iris Scan Overlay -->
+          <div class="iris-scan" id="iris-scan">
+            <div class="iris-scan__line"></div>
+            <div class="iris-scan__overlay"></div>
+          </div>
+        </div>
+        <div id="upload-preview" style="display:none; margin-top: 12px;">
+          <img id="preview-img" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--color-border);">
+        </div>
+      </div>
+      <div id="ai-result" style="display: none;">
+        <!-- AI判定結果 -->
+      </div>
+      <div style="display: flex; gap: 12px; margin-top: 24px;">
+        <button class="btn btn--secondary" id="btn-study-cancel" style="flex:1;">キャンセル</button>
+        <button class="btn btn--success" id="btn-study-submit" style="flex:1;">記録する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exchange Modal -->
+  <div class="modal-overlay" id="modal-exchange">
+    <div class="modal">
+      <div class="modal__title">🎁 dポイント交換申請</div>
+      <div class="form-group">
+        <label for="exchange-amount">交換ポイント数</label>
+        <input type="number" id="exchange-amount" min="100" step="100" value="100">
+        <p style="font-size: 0.8rem; color: var(--color-text-muted); margin-top: 8px;">
+          100ポイント単位で交換可能（交換レート: 100pt = 50 dポイント）
+        </p>
+      </div>
+      <div class="form-group">
+        <label for="exchange-email">通知先メールアドレス</label>
+        <input type="email" id="exchange-email" placeholder="your@email.com">
+      </div>
+      <div id="exchange-summary" style="display: none;" class="ai-result">
+        <!-- 交換サマリー -->
+      </div>
+      <div style="display: flex; gap: 12px; margin-top: 24px;">
+        <button class="btn btn--secondary" id="btn-exchange-cancel" style="flex:1;">キャンセル</button>
+        <button class="btn btn--primary" id="btn-exchange-submit" style="flex:1;">申請する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <span id="toast-icon">✅</span>
+    <span id="toast-message">ポイントが追加されました！</span>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
