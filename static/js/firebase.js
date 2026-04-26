@@ -5,12 +5,13 @@
 
 // Firebase SDK (Modular API) を CDN からインポート
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js';
-import { 
-  getAuth, 
-  signInWithPopup, 
-  GoogleAuthProvider, 
-  signOut as firebaseSignOut, 
-  onAuthStateChanged 
+import {
+  getAuth,
+  signInWithRedirect,
+  getRedirectResult,
+  GoogleAuthProvider,
+  signOut as firebaseSignOut,
+  onAuthStateChanged
 } from 'https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js';
 import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js';
 
@@ -31,14 +32,21 @@ const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
 /**
- * Google ログイン
+ * Google ログイン（Cloud Run対応: signInWithPopupはCOOPによりブロックされるためリダイレクト方式を使用）
  */
 export async function signInWithGoogle() {
+  await signInWithRedirect(auth, googleProvider);
+}
+
+/**
+ * リダイレクト後のログイン結果を処理する
+ */
+export async function handleRedirectResult() {
   try {
-    const result = await signInWithPopup(auth, googleProvider);
-    return result.user;
+    const result = await getRedirectResult(auth);
+    return result ? result.user : null;
   } catch (error) {
-    console.error('Login error:', error.message);
+    console.error('Redirect result error:', error.message);
     throw error;
   }
 }
