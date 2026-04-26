@@ -5,7 +5,7 @@
 
 import { calculateDailyPoints, calculateLevel, checkMissionCompletion } from './points.js';
 import store from './store.js';
-import { signInWithGoogle, signOut, getCurrentUser } from './firebase.js';
+import { signInWithGoogle, signOut, getCurrentUser, handleRedirectResult } from './firebase.js';
 // import { GoogleGenerativeAI } from '@google/generative-ai'; // Removed for security, now using backend API
 
 // const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
@@ -25,6 +25,19 @@ class GrowthPointApp {
   async init() {
     this.bindEvents();
     this.updateGreeting();
+
+    // リダイレクトログイン後の結果を処理
+    try {
+      const redirectUser = await handleRedirectResult();
+      if (redirectUser) {
+        await this.showApp();
+        this.showToast('success', `${redirectUser.displayName || 'ユーザー'}さん、おかえりなさい！`);
+        return;
+      }
+    } catch (error) {
+      console.error('Redirect result error:', error);
+      this.showToast('error', 'ログインに失敗しました: ' + error.message);
+    }
 
     // セッション確認
     const user = await getCurrentUser();
@@ -111,12 +124,8 @@ class GrowthPointApp {
   // --- ログイン ---
   async login() {
     try {
-      const user = await signInWithGoogle();
-      if (user) {
-        // ログイン成功時に画面を切り替え
-        await this.showApp();
-        this.showToast('success', `${user.displayName || 'ユーザー'}さん、おかえりなさい！`);
-      }
+      await signInWithGoogle();
+      // signInWithRedirectはページをリダイレクトするため、以降の処理はinit()で行う
     } catch (error) {
       console.error('Login error:', error);
       this.showToast('error', 'ログインに失敗しました: ' + error.message);
@@ -535,8 +544,14 @@ class GrowthPointApp {
     }, 800);
 
     try {
+      clearInterval(interval);
       if (irisScan) irisScan.classList.remove('active');
-      
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('topic', topic);
+      formData.append('notes', notes);
+
       const response = await fetch('/api/verify-study', {
         method: 'POST',
         body: formData
