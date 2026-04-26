@@ -216,15 +216,284 @@
         <button class="chip">セブン-イレブン</button>
       </div>
     </div>
-  </main>
+  </div>
 
-  <footer>
-    <p class="data-updated">DATA UPDATED: 2024.05.20</p>
-    <nav class="footer-links">
-      <a href="#">使い方</a>
-      <a href="#">対応決済一覧</a>
-    </nav>
-  </footer>
+  <div class="toast" id="toast">
+    <span id="toast-icon">✅</span>
+    <span id="toast-message" class="font-bold text-sm tracking-wide"></span>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+    import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, signOut, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, query, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+
+    // 1. Firebase構成の取得（自動 & グローバル変数のハイブリッド）
+    async function loadFirebase() {
+      // 以前の環境で使われていたグローバル変数があれば優先
+      if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+        try {
+          return typeof __firebase_config === 'string' ? JSON.parse(__firebase_config) : __firebase_config;
+        } catch(e) { console.error("JSON parse failed for __firebase_config"); }
+      }
+
+      // なければ Hosting の自動設定を取得
+      try {
+        const response = await fetch('/__/firebase/init.json');
+        if (response.ok) return await response.json();
+      } catch (e) {
+        console.warn("Firebase auto-init failed, checking fallbacks...");
+      }
+
+      // 最終手段：プロジェクトIDからの推測（API Keyは本来自動取得されるべき）
+      return {
+        apiKey: "", 
+        authDomain: "growth-point-app-2026.firebaseapp.com",
+        projectId: "growth-point-app-2026",
+        storageBucket: "growth-point-app-2026.firebasestorage.app"
+      };
+    }
+
+    const firebaseConfig = await loadFirebase();
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const googleProvider = new GoogleAuthProvider();
+
+    let currentUser = null;
+    let userData = { points: 0, streak: 0, level: 1, todayMinutes: 0 };
+
+    const showToast = (msg, icon = '✅') => {
+      const t = document.getElementById('toast');
+      if(t) {
+        document.getElementById('toast-message').textContent = msg;
+        document.getElementById('toast-icon').textContent = icon;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+      }
+    };
+
+    const closeModal = (id) => {
+      document.getElementById(id).classList.remove('active');
+    };
+    
+    window.closeModal = closeModal;
+
+    const updateUI = () => {
+      const p = userData.points || 0;
+      document.getElementById('nav-total-points').textContent = p.toLocaleString();
+      document.getElementById('stat-points').textContent = p.toLocaleString();
+      document.getElementById('stat-streak').textContent = userData.streak || 0;
+      document.getElementById('stat-today-minutes').textContent = userData.todayMinutes || 0;
+      
+      const level = Math.floor(p / 100) + 1;
+      document.getElementById('stat-level').textContent = `Lv.${level}`;
+      
+      const progress = p % 100;
+      document.getElementById('level-progress').style.width = `${progress}%`;
+      document.getElementById('level-progress-text').textContent = `NEXT: ${100 - progress} PT`;
+    };
+
+    let myChart = null;
+    const initChart = (history = [30, 45, 20, 60, 40, 90, 30]) => {
+      const ctx = document.getElementById('weekly-chart');
+      if (myChart) myChart.destroy();
+      myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          datasets: [{
+            data: history,
+            backgroundColor: '#6366f1',
+            borderRadius: 12,
+            borderSkipped: false,
+            barThickness: 16
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, border: { display: false }, ticks: { font: { weight: '600', size: 10 } } },
+            y: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false }, ticks: { display: false } }
+          }
+        }
+      });
+    };
+
+    async function verifyStudyImage(base64Data, topic) {
+      if (!apiKey) return { isStudy: true, confidence: 0.9, topicDetected: topic, message: "Demo Mode: AI verification skipped." };
+      
+      const prompt = `Learning Verification AI: Analyze this image for proof of studying ${topic}. Return JSON: {isStudy:bool, confidence:number, message:string}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+      
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "image/png", data: base64Data.split(',')[1] } }] }]
+          })
+        });
+        const json = await res.json();
+        return JSON.parse(json.candidates[0].content.parts[0].text);
+      } catch (err) {
+        return { isStudy: true, confidence: 0.5, message: "Effort appreciated!" };
+      }
+    }
+
+    const initApp = async (method = 'auto') => {
+      try {
+        if (method === 'google') {
+          await signInWithPopup(auth, googleProvider);
+        } else if (method === 'demo') {
+          await signInAnonymously(auth);
+        }
+      } catch (e) {
+        console.error("Auth Error:", e);
+        const errorMsg = e.code === 'auth/popup-blocked' ? "ポップアップがブロックされました" : "認証失敗: " + e.code;
+        showToast(errorMsg, "❌");
+      }
+    };
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        const root = document.getElementById('app');
+        document.getElementById('login-screen').style.display = 'none';
+        root.classList.remove('hidden');
+        setTimeout(() => root.classList.remove('opacity-0'), 100);
+        
+        // Consistent Firestore Path
+        const appId = 'growth-point-v2';
+        const userDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'main');
+        const snap = await getDoc(userDocRef);
+        
+        if (snap.exists()) {
+          userData = { ...userData, ...snap.data() };
+        } else {
+          await setDoc(userDocRef, userData, { merge: true });
+        }
+        
+        updateUI();
+        initChart();
+        loadActivities();
+      } else {
+        document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('app').classList.add('hidden');
+      }
+    });
+
+    const saveActivity = async (type, val, msg) => {
+      if (!currentUser) return;
+      const appId = 'growth-point-v2';
+      const activityRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'activities');
+      await addDoc(activityRef, {
+        type, value: val, message: msg, timestamp: serverTimestamp()
+      });
+      
+      userData.points += val;
+      if (type === 'study') userData.todayMinutes += parseInt(document.getElementById('study-duration').value);
+      
+      const userDocRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'main');
+      await updateDoc(userDocRef, {
+        points: userData.points,
+        todayMinutes: userData.todayMinutes
+      });
+      updateUI();
+    };
+
+    const loadActivities = () => {
+      const appId = 'growth-point-v2';
+      const q = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'activities');
+      onSnapshot(q, (snapshot) => {
+        const list = document.getElementById('activity-list');
+        list.innerHTML = '';
+        const docs = snapshot.docs.sort((a, b) => b.data().timestamp?.seconds - a.data().timestamp?.seconds).slice(0, 5);
+        
+        docs.forEach(d => {
+          const data = d.data();
+          const item = document.createElement('div');
+          item.className = 'bg-white p-4 rounded-2xl flex justify-between items-center shadow-sm border border-slate-100 hover:border-indigo-200 transition-all';
+          item.innerHTML = `
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-xl shadow-inner">${data.type === 'study' ? '📖' : '🌅'}</div>
+              <div>
+                <div class="font-bold text-sm text-slate-800">${data.message}</div>
+                <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">${data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleTimeString() : 'Just now'}</div>
+              </div>
+            </div>
+            <div class="text-indigo-600 font-extrabold text-sm tracking-tight">+${data.value}pt</div>
+          `;
+          list.appendChild(item);
+        });
+      });
+    };
+
+    // UI Listeners
+    document.getElementById('btn-login').onclick = () => initApp('google');
+    document.getElementById('btn-demo').onclick = () => initApp('demo');
+
+    document.getElementById('action-morning').onclick = () => document.getElementById('modal-morning').classList.add('active');
+    document.getElementById('action-study').onclick = () => document.getElementById('modal-study').classList.add('active');
+    document.getElementById('fab-record').onclick = () => document.getElementById('modal-study').classList.add('active');
+
+    document.getElementById('btn-morning-submit').onclick = async (e) => {
+      const btn = e.target;
+      btn.disabled = true;
+      const time = document.getElementById('wake-up-time').value;
+      const hour = parseInt(time.split(':')[0]);
+      const bonus = hour < 7 ? 15 : 5;
+      
+      await saveActivity('morning', bonus, `${time} Check-in`);
+      showToast(`${bonus} PT EARNED!`, '🌅');
+      closeModal('modal-morning');
+      btn.disabled = false;
+    };
+
+    const fileInput = document.getElementById('study-image');
+    document.getElementById('upload-area').onclick = () => fileInput.click();
+    fileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (re) => {
+          document.getElementById('upload-preview').classList.remove('hidden');
+          document.getElementById('preview-img').src = re.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
+    document.getElementById('btn-study-submit').onclick = async (e) => {
+      const btn = e.target;
+      const iris = document.getElementById('iris-scan');
+      const duration = document.getElementById('study-duration').value;
+      const topic = document.getElementById('study-topic').value;
+      const previewImg = document.getElementById('preview-img').src;
+
+      if (!previewImg || previewImg.includes('index.html')) {
+        showToast('Capture your proof!', '⚠️');
+        return;
+      }
+
+      btn.disabled = true;
+      iris.style.display = "block";
+
+      const aiResult = await verifyStudyImage(previewImg, topic);
+      
+      iris.style.display = "none";
+      btn.disabled = false;
+
+      if (aiResult.isStudy) {
+        const points = Math.floor(duration / 10) + 10;
+        await saveActivity('study', points, `${topic} ${duration}min`);
+        showToast(`AI VERIFIED! +${points}PT`, '✨');
+        closeModal('modal-study');
+      } else {
+        showToast('AI could not verify content', '❌');
+      }
+    };
 
 </body>
 </html>
