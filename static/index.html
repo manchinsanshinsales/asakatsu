@@ -226,7 +226,7 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
     import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, signOut, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, query, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, query, addDoc, serverTimestamp, where } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
     // 1. Firebase構成の取得（自動 & グローバル変数のハイブリッド）
     async function loadFirebase() {
@@ -364,15 +364,23 @@
         root.classList.remove('hidden');
         setTimeout(() => root.classList.remove('opacity-0'), 100);
         
-        // Consistent Firestore Path
-        const appId = 'growth-point-v2';
-        const userDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'main');
+        // Align with firestore.rules (/profiles/{userId})
+        const userDocRef = doc(db, 'profiles', user.uid);
         const snap = await getDoc(userDocRef);
         
         if (snap.exists()) {
-          userData = { ...userData, ...snap.data() };
+          const data = snap.data();
+          userData.points = data.total_points || 0;
+          userData.streak = data.streak || 0;
+          userData.todayMinutes = data.todayMinutes || 0;
         } else {
-          await setDoc(userDocRef, userData, { merge: true });
+          // Initialize profile with required fields for validation
+          await setDoc(userDocRef, {
+            total_points: 0,
+            display_name: user.displayName || "User",
+            streak: 0,
+            todayMinutes: 0
+          });
         }
         
         updateUI();
@@ -386,26 +394,33 @@
 
     const saveActivity = async (type, val, msg) => {
       if (!currentUser) return;
-      const appId = 'growth-point-v2';
-      const activityRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'activities');
-      await addDoc(activityRef, {
-        type, value: val, message: msg, timestamp: serverTimestamp()
+      
+      // Save to study_logs (/study_logs/{logId})
+      const logRef = collection(db, 'study_logs');
+      await addDoc(logRef, {
+        user_id: currentUser.uid,
+        type, 
+        value: val, 
+        message: msg, 
+        timestamp: serverTimestamp()
       });
       
       userData.points += val;
       if (type === 'study') userData.todayMinutes += parseInt(document.getElementById('study-duration').value);
       
-      const userDocRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'main');
+      // Update Profile using allowed path and field names
+      const userDocRef = doc(db, 'profiles', currentUser.uid);
       await updateDoc(userDocRef, {
-        points: userData.points,
-        todayMinutes: userData.todayMinutes
+        total_points: userData.points,
+        todayMinutes: userData.todayMinutes,
+        display_name: currentUser.displayName || "User"
       });
       updateUI();
     };
 
     const loadActivities = () => {
-      const appId = 'growth-point-v2';
-      const q = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'activities');
+      // Load from /study_logs where user_id matches
+      const q = query(collection(db, 'study_logs'), where("user_id", "==", currentUser.uid));
       onSnapshot(q, (snapshot) => {
         const list = document.getElementById('activity-list');
         list.innerHTML = '';
