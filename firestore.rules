@@ -5,7 +5,7 @@ service cloud.firestore {
     // データ型のバリデーション関数
     function isValidProfile(data) {
       return data.total_points is number && data.total_points >= 0
-          && data.display_name is string;
+          && data.nickname is string;
     }
 
     // ログイン済みユーザーのみプロフィールを読み書き可能（自分のみ）
