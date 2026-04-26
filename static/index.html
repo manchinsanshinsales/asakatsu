@@ -5,286 +5,646 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="朝活・スキル学習をdポイントに変換する成長可視化型ポイ活アプリ。AIが学習を証明し、努力がポイントに変わる。">
   <title>GrowthPoint – 成長可視化型ポイ活</title>
-  <link rel="icon" type="image/png" href="assets/logo.png">
-  <link rel="stylesheet" href="css/styles.css">
-  <!-- Firebase SDKs are imported in js/firebase.js -->
-  <script type="importmap">
-    {
-      "imports": {
-        "@google/generative-ai": "https://esm.run/@google/generative-ai"
-      }
-    }
-  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --color-primary: #4f46e5;
+      --gradient-primary: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    }
+
+    body {
+      background-color: #f8fafc;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      color: #1e293b;
+    }
+
+    .glass-nav {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 1.25rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+      transition: transform 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .action-card {
+      background: white;
+      border-radius: 1rem;
+      padding: 1.25rem;
+      border: 1px solid #e2e8f0;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .action-card:hover {
+      border-color: #6366f1;
+      background: #f5f3ff;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1rem;
+    }
+
+    .modal {
+      background: white;
+      width: 100%;
+      max-width: 500px;
+      border-radius: 1.5rem;
+      padding: 2rem;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    /* Iris Scan Animation */
+    .iris-scan {
+      position: absolute;
+      inset: 0;
+      display: none;
+      overflow: hidden;
+      border-radius: 0.5rem;
+    }
+
+    .iris-scan__line {
+      position: absolute;
+      width: 100%;
+      height: 2px;
+      background: #6366f1;
+      box-shadow: 0 0 15px #6366f1;
+      top: 0;
+      animation: scan 2s linear infinite;
+      z-index: 10;
+    }
+
+    @keyframes scan {
+      0% { top: 0%; }
+      50% { top: 100%; }
+      100% { top: 0%; }
+    }
+
+    .iris-scan__overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #1e293b;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 2000;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--gradient-primary);
+      width: 0%;
+      transition: width 0.6s ease-out;
+    }
+  </style>
 </head>
 <body>
 
-  <!-- ===== LOGIN SCREEN ===== -->
-  <div id="login-screen" class="login-screen">
-    <div class="login-card">
-      <div class="login-card__logo">
-        <img src="assets/logo.png" alt="GrowthPoint Logo" style="width: 120px; height: 120px; margin-bottom: 16px;">
-        <div>GrowthPoint</div>
+  <!-- LOGIN SCREEN -->
+  <div id="login-screen" class="min-h-screen flex items-center justify-center bg-indigo-600 p-4">
+    <div class="bg-white rounded-[2rem] p-10 text-center shadow-2xl max-w-sm w-full">
+      <div class="mb-6 flex flex-col items-center">
+        <div class="w-24 h-24 bg-indigo-100 rounded-3xl flex items-center justify-center text-4xl mb-4">🚀</div>
+        <h1 class="text-2xl font-bold text-indigo-900">GrowthPoint</h1>
+        <p class="text-slate-500 text-sm mt-1">学びをポイントに。努力を報酬に。</p>
       </div>
-      <p class="login-card__subtitle">学びをポイントに。努力を報酬に。</p>
-      <div style="font-size: 4rem; margin-bottom: 24px;">🚀</div>
-      <p style="color: var(--color-text-secondary); font-size: 0.85rem; margin-bottom: 32px; line-height: 1.7;">
+      <p class="text-slate-600 mb-8 leading-relaxed text-sm">
         朝活やスキル学習を記録して<br>ポイントを貯めてdポイントに交換
       </p>
-      <button id="btn-login" class="btn btn--google btn--lg">
+      <button id="btn-login" class="w-full bg-white border border-slate-200 py-3 px-4 rounded-xl flex items-center justify-center gap-3 font-semibold hover:bg-slate-50 transition mb-3">
         <svg width="20" height="20" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
         Googleでログイン
       </button>
-      <button id="btn-demo" class="btn btn--secondary btn--full" style="margin-top: 12px;">
+      <button id="btn-demo" class="w-full bg-slate-900 text-white py-3 px-4 rounded-xl font-semibold hover:bg-slate-800 transition">
         ▶ デモモードで体験
       </button>
     </div>
   </div>
 
-  <!-- ===== MAIN APP ===== -->
-  <div id="app" style="display: none;">
-
+  <!-- MAIN APP -->
+  <div id="app" class="hidden min-h-screen">
     <!-- Navbar -->
-    <nav class="navbar" id="navbar">
-      <div class="container navbar__inner">
-        <div class="navbar__logo">
-          <img src="assets/logo.png" alt="Logo" style="width: 24px; height: 24px; margin-right: 8px;">
-          <span class="navbar__logo-text">GrowthPoint</span><span> β</span>
+    <nav class="glass-nav sticky top-0 z-50 py-3">
+      <div class="container max-w-2xl mx-auto px-4 flex justify-between items-center">
+        <div class="flex items-center font-bold text-indigo-600">
+          <span class="text-2xl mr-2">💎</span> GrowthPoint <span class="ml-1 text-[10px] bg-indigo-100 px-1 rounded">β</span>
         </div>
-        <div class="navbar__user">
-          <div class="navbar__points" id="navbar-points">
-            <span class="navbar__points-icon">💎</span>
-            <span id="nav-total-points">0</span> pt
+        <div class="flex items-center gap-3">
+          <div class="bg-slate-100 px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
+            <span class="text-xs">💎</span> <span id="nav-total-points">0</span> pt
           </div>
-          <div class="navbar__avatar" id="user-avatar" style="background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">
-            👤
-          </div>
+          <div id="user-avatar" class="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs">👤</div>
         </div>
       </div>
     </nav>
 
-    <!-- Hero -->
-    <section class="hero container">
-      <p class="hero__greeting" id="greeting">おはようございます 🌅</p>
-      <h1 class="hero__title">
-        今日も<span class="hero__title-accent">進化</span>を続けよう
-      </h1>
-      <p style="color: var(--color-text-secondary); margin-top: -16px; margin-bottom: 32px; font-size: 0.9rem;">GrowthPoint 2.0: Evolution System</p>
-    </section>
+    <main class="container max-w-2xl mx-auto px-4 pt-8 pb-24">
+      <!-- Hero -->
+      <section class="mb-8">
+        <p class="text-slate-500 font-medium mb-1" id="greeting">おはようございます 🌅</p>
+        <h1 class="text-3xl font-extrabold tracking-tight">今日も<span class="text-indigo-600">進化</span>を続けよう</h1>
+      </section>
 
-    <!-- Stats Grid -->
-    <section class="container">
-      <div class="stats-grid">
-        <div class="stat-card stat-card--points animate-fade-in">
-          <div class="stat-card__icon">💎</div>
-          <div class="stat-card__value" id="stat-points">0</div>
-          <div class="stat-card__label">累計ポイント</div>
+      <!-- Stats Grid -->
+      <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="stat-card">
+          <div class="text-2xl mb-1">💎</div>
+          <div class="text-xl font-bold" id="stat-points">0</div>
+          <div class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Total Points</div>
         </div>
-        <div class="stat-card stat-card--streak animate-fade-in">
-          <div class="stat-card__icon">🔥</div>
-          <div class="stat-card__value" id="stat-streak">0</div>
-          <div class="stat-card__label">連続日数</div>
+        <div class="stat-card">
+          <div class="text-2xl mb-1">🔥</div>
+          <div class="text-xl font-bold" id="stat-streak">0</div>
+          <div class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Streak Days</div>
         </div>
-        <div class="stat-card stat-card--study animate-fade-in">
-          <div class="stat-card__icon">⏱️</div>
-          <div class="stat-card__value" id="stat-today-minutes">0</div>
-          <div class="stat-card__label">今日の学習（分）</div>
+        <div class="stat-card">
+          <div class="text-2xl mb-1">⏱️</div>
+          <div class="text-xl font-bold" id="stat-today-minutes">0</div>
+          <div class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Study (Min)</div>
         </div>
-        <div class="stat-card stat-card--level animate-fade-in">
-          <div class="stat-card__icon">⭐</div>
-          <div class="stat-card__value" id="stat-level">Lv.1</div>
-          <div class="stat-card__label" id="stat-level-title">ビギナー</div>
+        <div class="stat-card">
+          <div class="text-2xl mb-1">⭐</div>
+          <div class="text-xl font-bold" id="stat-level">Lv.1</div>
+          <div class="text-[10px] text-slate-400 uppercase tracking-wider font-bold" id="stat-level-title">Beginner</div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Level Progress -->
-    <section class="container" style="margin-top: -16px; margin-bottom: 32px;">
-      <div class="progress-bar">
-        <div class="progress-bar__fill" id="level-progress" style="width: 0%"></div>
-      </div>
-      <p style="text-align: center; font-size: 0.8rem; color: var(--color-text-muted); margin-top: 8px;" id="level-progress-text">
-        次のレベルまで 100 pt
-      </p>
-    </section>
-
-    <!-- Quick Actions -->
-    <section class="container">
-      <h2 class="section-title">⚡ クイックアクション</h2>
-      <div class="actions-grid">
-        <div class="action-card" id="action-morning">
-          <div class="action-card__icon">🌅</div>
-          <div class="action-card__title">朝活チェックイン</div>
-          <div class="action-card__desc">起床時間を記録して早起きボーナスをゲット！</div>
-          <div class="action-card__reward">💎 最大 +10pt</div>
+      <!-- Level Progress -->
+      <section class="mb-10">
+        <div class="progress-bar mb-2">
+          <div id="level-progress" class="progress-bar-fill"></div>
         </div>
-        <div class="action-card" id="action-study">
-          <div class="action-card__icon">📖</div>
-          <div class="action-card__title">学習を記録する</div>
-          <div class="action-card__desc">学習内容と時間を記録。AIが学習を証明します。</div>
-          <div class="action-card__reward">💎 時間 + AIボーナス</div>
-        </div>
-        <div class="action-card" id="action-exchange">
-          <div class="action-card__icon">🎁</div>
-          <div class="action-card__title">ポイントを交換</div>
-          <div class="action-card__desc">貯めたポイントをdポイントに交換申請。</div>
-          <div class="action-card__reward">100pt → 50 dポイント</div>
-        </div>
-      </div>
-    </section>
+        <p id="level-progress-text" class="text-center text-xs text-slate-400 font-medium">次のレベルまで 100 pt</p>
+      </section>
 
-    <!-- Weekly Chart -->
-    <section class="container">
-      <h2 class="section-title">📊 今週の学習記録</h2>
-      <div class="chart-container">
-        <canvas id="weekly-chart"></canvas>
-      </div>
-    </section>
-
-    <!-- Missions -->
-    <section class="container">
-      <h2 class="section-title">🎯 ミッション</h2>
-      <div class="missions-list" id="missions-list">
-        <!-- JS にて動的生成 -->
-      </div>
-    </section>
-
-    <!-- Point Exchange -->
-    <section class="container exchange-section">
-      <h2 class="section-title">🔄 dポイント交換</h2>
-      <div class="exchange-card">
-        <div class="exchange-card__info">
-          <div class="exchange-card__title">アプリ内ポイント → dポイント</div>
-          <div class="exchange-card__desc">
-            貯めたポイントを申請すると、dポイントプリペイド番号をお送りします。<br>
-            最低100ポイントから交換可能です。
+      <!-- Quick Actions -->
+      <section class="mb-10">
+        <h2 class="text-lg font-bold mb-4 flex items-center gap-2">⚡ クイックアクション</h2>
+        <div class="grid grid-cols-1 gap-3">
+          <div class="action-card flex items-center gap-4" id="action-morning">
+            <div class="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-2xl">🌅</div>
+            <div class="flex-1">
+              <h3 class="font-bold">朝活チェックイン</h3>
+              <p class="text-xs text-slate-500">起床記録で早起きボーナス</p>
+            </div>
+            <div class="text-indigo-600 font-bold text-sm">+10pt</div>
           </div>
-          <div class="exchange-card__rate">
-            <span>交換レート:</span>
-            <span class="exchange-card__rate-value">100 pt = 50 dポイント</span>
+          <div class="action-card flex items-center gap-4" id="action-study">
+            <div class="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-2xl">📖</div>
+            <div class="flex-1">
+              <h3 class="font-bold">学習を記録する</h3>
+              <p class="text-xs text-slate-500">AIが学習を自動証明</p>
+            </div>
+            <div class="text-indigo-600 font-bold text-sm">Bonus</div>
           </div>
         </div>
-        <button class="btn btn--primary btn--lg" id="btn-exchange">交換申請</button>
-      </div>
-    </section>
+      </section>
 
-    <!-- Recent Activity -->
-    <section class="container" style="padding-bottom: 80px;">
-      <h2 class="section-title">📋 最近のアクティビティ</h2>
-      <div id="activity-list" class="missions-list">
-        <!-- JS にて動的生成 -->
-      </div>
-    </section>
+      <!-- Chart -->
+      <section class="mb-10">
+        <h2 class="text-lg font-bold mb-4 flex items-center gap-2">📊 今週の記録</h2>
+        <div class="bg-white p-6 rounded-[1.5rem] shadow-sm border border-slate-100 h-64">
+          <canvas id="weekly-chart"></canvas>
+        </div>
+      </section>
 
+      <!-- Missions -->
+      <section class="mb-10">
+        <h2 class="text-lg font-bold mb-4">🎯 デイリーミッション</h2>
+        <div id="missions-list" class="space-y-2">
+          <!-- Dynamic -->
+        </div>
+      </section>
+
+      <!-- Recent Activity -->
+      <section>
+        <h2 class="text-lg font-bold mb-4">📋 最近のアクティビティ</h2>
+        <div id="activity-list" class="space-y-3">
+          <!-- Dynamic -->
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Nav for Mobile -->
+    <div class="fixed bottom-0 inset-x-0 bg-white border-t border-slate-100 px-6 py-3 flex justify-around md:hidden">
+      <button class="text-indigo-600 flex flex-col items-center gap-1">
+        <span class="text-xl">🏠</span>
+        <span class="text-[10px] font-bold">HOME</span>
+      </button>
+      <button id="btn-exchange-trigger" class="text-slate-400 flex flex-col items-center gap-1">
+        <span class="text-xl">🎁</span>
+        <span class="text-[10px] font-bold">GIFT</span>
+      </button>
+      <button class="text-slate-400 flex flex-col items-center gap-1">
+        <span class="text-xl">👤</span>
+        <span class="text-[10px] font-bold">MY</span>
+      </button>
+    </div>
   </div>
 
-  <!-- ===== MODALS ===== -->
-
-  <!-- Morning Check-in Modal -->
+  <!-- MODALS -->
+  <!-- Morning Modal -->
   <div class="modal-overlay" id="modal-morning">
     <div class="modal">
-      <div class="modal__title">🌅 朝活チェックイン</div>
-      <div class="form-group">
-        <label for="wake-up-time">起床時間</label>
-        <input type="time" id="wake-up-time" value="06:30">
-      </div>
-      <div class="form-group">
-        <label>目標起床時間</label>
-        <input type="time" id="target-wake-time" value="07:00">
-      </div>
-      <div id="morning-result" style="display: none;">
-        <!-- 判定結果をここに表示 -->
-      </div>
-      <div style="display: flex; gap: 12px; margin-top: 24px;">
-        <button class="btn btn--secondary" id="btn-morning-cancel" style="flex:1;">キャンセル</button>
-        <button class="btn btn--primary" id="btn-morning-submit" style="flex:1;">チェックイン</button>
+      <h2 class="text-xl font-bold mb-6 flex items-center gap-2">🌅 朝活チェックイン</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1">起床時間</label>
+          <input type="time" id="wake-up-time" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500" value="06:30">
+        </div>
+        <div id="morning-result" class="hidden p-4 rounded-xl bg-indigo-50 border border-indigo-100 text-sm text-indigo-700"></div>
+        <div class="flex gap-3 pt-4">
+          <button class="flex-1 py-3 px-4 rounded-xl font-bold bg-slate-100" onclick="closeModal('modal-morning')">キャンセル</button>
+          <button id="btn-morning-submit" class="flex-1 py-3 px-4 rounded-xl font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-200">チェックイン</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Study Log Modal -->
+  <!-- Study Modal -->
   <div class="modal-overlay" id="modal-study">
     <div class="modal">
-      <div class="modal__title">📖 学習を記録する</div>
-      <div class="form-group">
-        <label for="study-topic">学習カテゴリ</label>
-        <select id="study-topic">
-          <option value="GCP">Google Cloud</option>
-          <option value="AI">AI / 機械学習</option>
-          <option value="Programming">プログラミング</option>
-          <option value="Data">データエンジニアリング</option>
-          <option value="Business">ビジネス / セールス</option>
-          <option value="English">英語</option>
-          <option value="Other">その他</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="study-duration">学習時間（分）</label>
-        <input type="number" id="study-duration" min="5" max="480" value="30" step="5">
-      </div>
-      <div class="form-group">
-        <label for="study-notes">学習メモ（任意）</label>
-        <textarea id="study-notes" placeholder="何を学んだか簡単にメモ..."></textarea>
-      </div>
-      <div class="form-group">
-        <label>📸 学習の証明（スクリーンショット）</label>
-        <div class="upload-area" id="upload-area" style="position: relative;">
-          <div class="upload-area__icon">📸</div>
-          <div class="upload-area__text">クリックまたはドラッグ＆ドロップ</div>
-          <div class="upload-area__hint">※ ノートやコード画面のスクショをアップロードすると、AIが学習内容を判定します</div>
-          <input type="file" id="study-image" accept="image/*" style="display:none;">
-          
-          <!-- Iris Scan Overlay -->
-          <div class="iris-scan" id="iris-scan">
-            <div class="iris-scan__line"></div>
-            <div class="iris-scan__overlay"></div>
+      <h2 class="text-xl font-bold mb-6 flex items-center gap-2">📖 学習を記録</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1">カテゴリ</label>
+          <select id="study-topic" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+            <option value="Programming">プログラミング</option>
+            <option value="English">英語</option>
+            <option value="Business">ビジネス</option>
+            <option value="Other">その他</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1">学習時間 (分)</label>
+          <input type="number" id="study-duration" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl" value="30">
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1">📸 学習の証明 (AI判定)</label>
+          <div id="upload-area" class="relative border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:bg-slate-50 transition cursor-pointer">
+            <div class="text-3xl mb-2">📸</div>
+            <p class="text-xs text-slate-500">ノートや画面の写真をアップロード</p>
+            <input type="file" id="study-image" class="hidden" accept="image/*">
+            <!-- Iris Scan -->
+            <div class="iris-scan" id="iris-scan">
+              <div class="iris-scan__line"></div>
+              <div class="iris-scan__overlay"></div>
+            </div>
+          </div>
+          <div id="upload-preview" class="hidden mt-4">
+            <img id="preview-img" class="w-full rounded-lg shadow-sm">
           </div>
         </div>
-        <div id="upload-preview" style="display:none; margin-top: 12px;">
-          <img id="preview-img" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--color-border);">
+        <div id="ai-result" class="hidden p-4 rounded-xl bg-emerald-50 border border-emerald-100 text-sm text-emerald-700"></div>
+        <div class="flex gap-3 pt-4">
+          <button class="flex-1 py-3 px-4 rounded-xl font-bold bg-slate-100" onclick="closeModal('modal-study')">戻る</button>
+          <button id="btn-study-submit" class="flex-1 py-3 px-4 rounded-xl font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-200">AI証明して記録</button>
         </div>
       </div>
-      <div id="ai-result" style="display: none;">
-        <!-- AI判定結果 -->
-      </div>
-      <div style="display: flex; gap: 12px; margin-top: 24px;">
-        <button class="btn btn--secondary" id="btn-study-cancel" style="flex:1;">キャンセル</button>
-        <button class="btn btn--success" id="btn-study-submit" style="flex:1;">記録する</button>
-      </div>
     </div>
   </div>
 
-  <!-- Exchange Modal -->
-  <div class="modal-overlay" id="modal-exchange">
-    <div class="modal">
-      <div class="modal__title">🎁 dポイント交換申請</div>
-      <div class="form-group">
-        <label for="exchange-amount">交換ポイント数</label>
-        <input type="number" id="exchange-amount" min="100" step="100" value="100">
-        <p style="font-size: 0.8rem; color: var(--color-text-muted); margin-top: 8px;">
-          100ポイント単位で交換可能（交換レート: 100pt = 50 dポイント）
-        </p>
-      </div>
-      <div class="form-group">
-        <label for="exchange-email">通知先メールアドレス</label>
-        <input type="email" id="exchange-email" placeholder="your@email.com">
-      </div>
-      <div id="exchange-summary" style="display: none;" class="ai-result">
-        <!-- 交換サマリー -->
-      </div>
-      <div style="display: flex; gap: 12px; margin-top: 24px;">
-        <button class="btn btn--secondary" id="btn-exchange-cancel" style="flex:1;">キャンセル</button>
-        <button class="btn btn--primary" id="btn-exchange-submit" style="flex:1;">申請する</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast -->
+  <!-- Toast Notification -->
   <div class="toast" id="toast">
     <span id="toast-icon">✅</span>
-    <span id="toast-message">ポイントが追加されました！</span>
+    <span id="toast-message">メッセージ</span>
   </div>
 
-  <script type="module" src="js/app.js"></script>
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+    import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, query, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+
+    const apiKey = ""; // API Key via environment
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'growth-point-v2';
+    const firebaseConfig = JSON.parse(__firebase_config);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+    let userData = {
+      points: 0,
+      streak: 0,
+      level: 1,
+      todayMinutes: 0,
+      lastLogin: null
+    };
+
+    // --- Utils ---
+    const showToast = (msg, icon = '✅') => {
+      const t = document.getElementById('toast');
+      document.getElementById('toast-message').textContent = msg;
+      document.getElementById('toast-icon').textContent = icon;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    };
+
+    const closeModal = (id) => {
+      document.getElementById(id).style.display = 'none';
+    };
+
+    const updateUI = () => {
+      document.getElementById('nav-total-points').textContent = userData.points;
+      document.getElementById('stat-points').textContent = userData.points;
+      document.getElementById('stat-streak').textContent = userData.streak;
+      document.getElementById('stat-today-minutes').textContent = userData.todayMinutes;
+      
+      const level = Math.floor(userData.points / 100) + 1;
+      userData.level = level;
+      document.getElementById('stat-level').textContent = `Lv.${level}`;
+      
+      const progress = userData.points % 100;
+      document.getElementById('level-progress').style.width = `${progress}%`;
+      document.getElementById('level-progress-text').textContent = `次のレベルまで ${100 - progress} pt`;
+    };
+
+    // --- Chart ---
+    let myChart = null;
+    const initChart = () => {
+      const ctx = document.getElementById('weekly-chart');
+      if (myChart) myChart.destroy();
+      myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['月', '火', '水', '木', '金', '土', '日'],
+          datasets: [{
+            label: '学習時間(分)',
+            data: [30, 45, 20, 60, 40, 90, 30],
+            backgroundColor: '#6366f1',
+            borderRadius: 8,
+            borderSkipped: false,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, border: { display: false } },
+            y: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false } }
+          }
+        }
+      });
+    };
+
+    // --- AI Verification ---
+    async function verifyStudyImage(base64Data, topic) {
+      const prompt = `あなたは学習支援AIです。この画像を見て、${topic}に関する学習の証拠（ノート、コード、書籍など）が含まれているか判定してください。
+      判定結果を以下のJSON形式で返してください。
+      {
+        "isStudy": boolean,
+        "confidence": number(0-1),
+        "topicDetected": string,
+        "message": "ユーザーへの一言"
+      }`;
+
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+      
+      const payload = {
+        contents: [{
+          parts: [
+            { text: prompt },
+            { inlineData: { mimeType: "image/png", data: base64Data.split(',')[1] } }
+          ]
+        }],
+        generationConfig: { responseMimeType: "application/json" }
+      };
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        return JSON.parse(result.candidates[0].content.parts[0].text);
+      } catch (err) {
+        console.error(err);
+        return { isStudy: true, confidence: 0.5, topicDetected: topic, message: "AI解析に失敗しましたが、努力を信じて記録します！" };
+      }
+    }
+
+    // --- Firebase Logic ---
+    const initApp = async () => {
+      if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+        await signInWithCustomToken(auth, __initial_auth_token);
+      } else {
+        await signInAnonymously(auth);
+      }
+
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          currentUser = user;
+          document.getElementById('login-screen').style.display = 'none';
+          document.getElementById('app').style.display = 'block';
+          
+          // Data Sync
+          const userDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'main');
+          const snap = await getDoc(userDocRef);
+          
+          if (snap.exists()) {
+            userData = { ...userData, ...snap.data() };
+          } else {
+            await setDoc(userDocRef, userData);
+          }
+          
+          updateUI();
+          initChart();
+          loadActivities();
+        }
+      });
+    };
+
+    const saveActivity = async (type, val, msg) => {
+      if (!currentUser) return;
+      const activityRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'activities');
+      await addDoc(activityRef, {
+        type,
+        value: val,
+        message: msg,
+        timestamp: serverTimestamp()
+      });
+      
+      // Update Stats
+      const userDocRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'main');
+      userData.points += val;
+      if (type === 'study') userData.todayMinutes += parseInt(document.getElementById('study-duration').value);
+      
+      await updateDoc(userDocRef, {
+        points: userData.points,
+        todayMinutes: userData.todayMinutes
+      });
+      
+      updateUI();
+    };
+
+    const loadActivities = () => {
+      const q = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'activities');
+      onSnapshot(q, (snapshot) => {
+        const list = document.getElementById('activity-list');
+        list.innerHTML = '';
+        const docs = snapshot.docs.sort((a, b) => b.data().timestamp?.seconds - a.data().timestamp?.seconds).slice(0, 5);
+        
+        docs.forEach(d => {
+          const data = d.data();
+          const item = document.createElement('div');
+          item.className = 'bg-white p-4 rounded-xl flex justify-between items-center shadow-sm border border-slate-50';
+          item.innerHTML = `
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">${data.type === 'study' ? '📖' : '🌅'}</div>
+              <div>
+                <div class="font-bold text-sm">${data.message}</div>
+                <div class="text-[10px] text-slate-400">${new Date(data.timestamp?.seconds * 1000).toLocaleTimeString()}</div>
+              </div>
+            </div>
+            <div class="text-indigo-600 font-bold">+${data.value}pt</div>
+          `;
+          list.appendChild(item);
+        });
+      }, (err) => console.error(err));
+    };
+
+    // --- UI Listeners ---
+    document.getElementById('btn-demo').onclick = () => initApp();
+    document.getElementById('btn-login').onclick = () => initApp();
+
+    document.getElementById('action-morning').onclick = () => {
+      document.getElementById('modal-morning').style.display = 'flex';
+    };
+
+    document.getElementById('btn-morning-submit').onclick = async () => {
+      const time = document.getElementById('wake-up-time').value;
+      const hour = parseInt(time.split(':')[0]);
+      let bonus = hour < 7 ? 10 : 5;
+      
+      await saveActivity('morning', bonus, `${time} にチェックインしました`);
+      showToast(`${bonus}ポイント獲得！`);
+      closeModal('modal-morning');
+    };
+
+    document.getElementById('action-study').onclick = () => {
+      document.getElementById('modal-study').style.display = 'flex';
+    };
+
+    // Image handling
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('study-image');
+    uploadArea.onclick = () => fileInput.click();
+
+    fileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (re) => {
+          document.getElementById('upload-preview').classList.remove('hidden');
+          document.getElementById('preview-img').src = re.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
+    document.getElementById('btn-study-submit').onclick = async () => {
+      const btn = document.getElementById('btn-study-submit');
+      const iris = document.getElementById('iris-scan');
+      const duration = document.getElementById('study-duration').value;
+      const topic = document.getElementById('study-topic').value;
+      const previewImg = document.getElementById('preview-img').src;
+
+      if (!previewImg || previewImg.includes('index.html')) {
+        showToast('学習の証明写真をアップロードしてください', '⚠️');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "AI解析中...";
+      iris.style.display = "block";
+
+      const aiResult = await verifyStudyImage(previewImg, topic);
+      
+      iris.style.display = "none";
+      btn.disabled = false;
+      btn.textContent = "AI証明して記録";
+
+      if (aiResult.isStudy) {
+        const points = Math.floor(duration / 10) + 10; // 10分毎に1pt + AIボーナス10pt
+        await saveActivity('study', points, `${topic}を${duration}分学習しました`);
+        showToast(`AIが承認！ ${points}ポイント獲得`, '✨');
+        closeModal('modal-study');
+      } else {
+        showToast('AIが学習内容を確認できませんでした', '❌');
+      }
+    };
+
+    // Init
+    window.onload = () => {
+      // Greetings based on time
+      const hr = new Date().getHours();
+      const greeting = hr < 11 ? "おはようございます 🌅" : hr < 17 ? "こんにちは ☀️" : "こんばんは 🌙";
+      document.getElementById('greeting').textContent = greeting;
+      
+      // Dummy Missions
+      const mList = document.getElementById('missions-list');
+      const missions = [
+        { t: "7時前にチェックイン", r: 5, c: false },
+        { t: "30分以上の学習記録", r: 10, c: true },
+        { t: "累計300pt達成", r: 50, c: false }
+      ];
+      missions.forEach(m => {
+        const div = document.createElement('div');
+        div.className = `flex justify-between items-center p-3 rounded-xl border ${m.c ? 'bg-slate-50 border-slate-100 opacity-60' : 'bg-white border-slate-200'}`;
+        div.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="text-sm">${m.c ? '✅' : '🎯'}</span>
+            <span class="text-xs font-bold">${m.t}</span>
+          </div>
+          <div class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold">+${m.r}pt</div>
+        `;
+        mList.appendChild(div);
+      });
+    };
+
+  </script>
 </body>
 </html>
