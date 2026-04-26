@@ -389,27 +389,30 @@
     import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, signOut, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
     import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, query, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-    // 1. Fetch Firebase Config automatically (Best for Firebase Hosting)
+    // 1. Firebase構成の取得（自動 & グローバル変数のハイブリッド）
     async function loadFirebase() {
-      let config = {
-        apiKey: "REPLACEME", // Fallback placeholder
-        authDomain: "growth-point-app-2026.firebaseapp.com",
-        projectId: "growth-point-app-2026",
-        storageBucket: "growth-point-app-2026.firebasestorage.app",
-        messagingSenderId: "123456789",
-        appId: "1:123456789:web:abcdef"
-      };
+      // 以前の環境で使われていたグローバル変数があれば優先
+      if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+        try {
+          return typeof __firebase_config === 'string' ? JSON.parse(__firebase_config) : __firebase_config;
+        } catch(e) { console.error("JSON parse failed for __firebase_config"); }
+      }
 
+      // なければ Hosting の自動設定を取得
       try {
         const response = await fetch('/__/firebase/init.json');
-        if (response.ok) {
-          config = await response.json();
-          console.log("Firebase initialized via auto-config.");
-        }
+        if (response.ok) return await response.json();
       } catch (e) {
-        console.warn("Auto-config not found, using fallback. (Local dev?)");
+        console.warn("Firebase auto-init failed, checking fallbacks...");
       }
-      return config;
+
+      // 最終手段：プロジェクトIDからの推測（API Keyは本来自動取得されるべき）
+      return {
+        apiKey: "", 
+        authDomain: "growth-point-app-2026.firebaseapp.com",
+        projectId: "growth-point-app-2026",
+        storageBucket: "growth-point-app-2026.firebasestorage.app"
+      };
     }
 
     const firebaseConfig = await loadFirebase();
@@ -508,8 +511,9 @@
           await signInAnonymously(auth);
         }
       } catch (e) {
-        console.error(e);
-        showToast("Auth failed", "❌");
+        console.error("Auth Error:", e);
+        const errorMsg = e.code === 'auth/popup-blocked' ? "ポップアップがブロックされました" : "認証失敗: " + e.code;
+        showToast(errorMsg, "❌");
       }
     };
 
