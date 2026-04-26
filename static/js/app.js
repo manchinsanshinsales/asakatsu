@@ -8,8 +8,6 @@ import store from './store.js';
 import { signInWithGoogle, signOut, getCurrentUser } from './firebase.js';
 // import { GoogleGenerativeAI } from '@google/generative-ai'; // Removed for security, now using backend API
 
-// Gemini API Key (Warning: Moved to backend for security)
-// const GEMINI_API_KEY = "AIzaSyAVSXe-2Srals2fEpAud-72Y-oVhdVEevM";
 // const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 // ===== DOM Elements =====
