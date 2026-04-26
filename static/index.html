@@ -386,26 +386,37 @@
 
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-    import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, signOut } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+    import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, signOut, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
     import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, query, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-    // Placeholder for configuration
-    const apiKey = ""; 
-    const appId = 'growth-point-v2';
-    
-    // Mock Config for Demo (to be replaced by environment)
-    const firebaseConfig = {
-      apiKey: "REPLACEME",
-      authDomain: "growth-point-app-2026.firebaseapp.com",
-      projectId: "growth-point-app-2026",
-      storageBucket: "growth-point-app-2026.firebasestorage.app",
-      messagingSenderId: "12345",
-      appId: "1:12345:web:67890"
-    };
+    // 1. Fetch Firebase Config automatically (Best for Firebase Hosting)
+    async function loadFirebase() {
+      let config = {
+        apiKey: "REPLACEME", // Fallback placeholder
+        authDomain: "growth-point-app-2026.firebaseapp.com",
+        projectId: "growth-point-app-2026",
+        storageBucket: "growth-point-app-2026.firebasestorage.app",
+        messagingSenderId: "123456789",
+        appId: "1:123456789:web:abcdef"
+      };
 
+      try {
+        const response = await fetch('/__/firebase/init.json');
+        if (response.ok) {
+          config = await response.json();
+          console.log("Firebase initialized via auto-config.");
+        }
+      } catch (e) {
+        console.warn("Auto-config not found, using fallback. (Local dev?)");
+      }
+      return config;
+    }
+
+    const firebaseConfig = await loadFirebase();
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const googleProvider = new GoogleAuthProvider();
 
     let currentUser = null;
     let userData = { points: 0, streak: 0, level: 1, todayMinutes: 0 };
@@ -489,45 +500,60 @@
       }
     }
 
-    const initApp = async () => {
-      onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          currentUser = user;
-          const root = document.getElementById('app');
-          document.getElementById('login-screen').style.display = 'none';
-          root.classList.remove('hidden');
-          setTimeout(() => root.classList.remove('opacity-0'), 100);
-          
-          const userDocRef = doc(db, 'users', user.uid);
-          const snap = await getDoc(userDocRef);
-          if (snap.exists()) {
-            userData = { ...userData, ...snap.data() };
-          } else {
-            await setDoc(userDocRef, userData);
-          }
-          
-          updateUI();
-          initChart();
-          loadActivities();
-        } else {
-          document.getElementById('login-screen').style.display = 'flex';
-          document.getElementById('app').classList.add('hidden');
+    const initApp = async (method = 'auto') => {
+      try {
+        if (method === 'google') {
+          await signInWithPopup(auth, googleProvider);
+        } else if (method === 'demo') {
+          await signInAnonymously(auth);
         }
-      });
-      
-      if (!auth.currentUser) await signInAnonymously(auth);
+      } catch (e) {
+        console.error(e);
+        showToast("Auth failed", "❌");
+      }
     };
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        const root = document.getElementById('app');
+        document.getElementById('login-screen').style.display = 'none';
+        root.classList.remove('hidden');
+        setTimeout(() => root.classList.remove('opacity-0'), 100);
+        
+        // Consistent Firestore Path
+        const appId = 'growth-point-v2';
+        const userDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'main');
+        const snap = await getDoc(userDocRef);
+        
+        if (snap.exists()) {
+          userData = { ...userData, ...snap.data() };
+        } else {
+          await setDoc(userDocRef, userData, { merge: true });
+        }
+        
+        updateUI();
+        initChart();
+        loadActivities();
+      } else {
+        document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('app').classList.add('hidden');
+      }
+    });
 
     const saveActivity = async (type, val, msg) => {
       if (!currentUser) return;
-      await addDoc(collection(db, 'users', currentUser.uid, 'activities'), {
+      const appId = 'growth-point-v2';
+      const activityRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'activities');
+      await addDoc(activityRef, {
         type, value: val, message: msg, timestamp: serverTimestamp()
       });
       
       userData.points += val;
       if (type === 'study') userData.todayMinutes += parseInt(document.getElementById('study-duration').value);
       
-      await updateDoc(doc(db, 'users', currentUser.uid), {
+      const userDocRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'main');
+      await updateDoc(userDocRef, {
         points: userData.points,
         todayMinutes: userData.todayMinutes
       });
@@ -535,7 +561,8 @@
     };
 
     const loadActivities = () => {
-      const q = collection(db, 'users', currentUser.uid, 'activities');
+      const appId = 'growth-point-v2';
+      const q = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'activities');
       onSnapshot(q, (snapshot) => {
         const list = document.getElementById('activity-list');
         list.innerHTML = '';
@@ -561,8 +588,8 @@
     };
 
     // UI Listeners
-    document.getElementById('btn-login').onclick = () => initApp();
-    document.getElementById('btn-demo').onclick = () => initApp();
+    document.getElementById('btn-login').onclick = () => initApp('google');
+    document.getElementById('btn-demo').onclick = () => initApp('demo');
 
     document.getElementById('action-morning').onclick = () => document.getElementById('modal-morning').classList.add('active');
     document.getElementById('action-study').onclick = () => document.getElementById('modal-study').classList.add('active');
