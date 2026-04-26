@@ -6,9 +6,6 @@
 import { calculateDailyPoints, calculateLevel, checkMissionCompletion } from './points.js';
 import store from './store.js';
 import { signInWithGoogle, signOut, getCurrentUser, handleRedirectResult } from './firebase.js';
-// import { GoogleGenerativeAI } from '@google/generative-ai'; // Removed for security, now using backend API
-
-// const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 // ===== DOM Elements =====
 const $ = (sel) => document.querySelector(sel);
