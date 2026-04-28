@@ -1,514 +1,519 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>creca</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VocabAI — AI英単語帳</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #faf9f7;
+    --bg2: #f2f0ec;
+    --bg3: #e8e5df;
+    --text: #1a1816;
+    --text2: #6b6560;
+    --text3: #a09a93;
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.2);
+    --accent: #2c4a2e;
+    --accent-bg: #e8f0e8;
+  }
+  body {
+    font-family: 'Georgia', serif;
+    background: var(--bg);
+    min-height: 100vh;
+    color: var(--text);
+  }
+  .app { max-width: 760px; margin: 0 auto; padding: 32px 20px 80px; }
 
-    html, body {
-      height: 100%;
-    }
+  /* Login Screen */
+  #login-screen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--bg); display: flex; flex-direction: column;
+    align-items: center; justify-content: center; z-index: 1000;
+  }
+  .login-card { text-align: center; max-width: 400px; padding: 40px; }
+  .login-card h1 { font-size: 48px; font-style: italic; margin-bottom: 16px; }
+  .btn-google {
+    padding: 14px 28px; background: #fff; border: 1px solid var(--border2);
+    border-radius: 50px; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 12px; margin-top: 24px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.2s;
+  }
+  .btn-google:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
 
-    body {
-      background: #1a1a1a;
-      color: #fff;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      -webkit-font-smoothing: antialiased;
-    }
+  .header { text-align: center; margin-bottom: 36px; }
+  .header h1 {
+    font-size: 42px; font-weight: 700; letter-spacing: -1.5px;
+    color: var(--text); font-style: italic;
+  }
+  .header p { font-size: 14px; color: var(--text2); margin-top: 6px; }
 
-    /* ── Header ── */
-    header {
-      display: flex;
-      justify-content: flex-end;
-      padding: 20px 24px 0;
-    }
+  .nav {
+    display: flex; gap: 4px;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 4px; margin-bottom: 24px;
+  }
+  .nav-btn {
+    flex: 1; padding: 10px 8px; border: none;
+    background: transparent; border-radius: 10px;
+    cursor: pointer; font-size: 14px; font-weight: 500;
+    color: var(--text2); transition: all 0.15s; font-family: inherit;
+  }
+  .nav-btn.active {
+    background: #fff; color: var(--text);
+    border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
 
-    .btn-saved {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: none;
-      border: none;
-      color: #888;
-      font-size: 14px;
-      font-family: inherit;
-      cursor: pointer;
-      padding: 6px 10px;
-      border-radius: 8px;
-      transition: color 0.2s;
-    }
+  .card {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px; margin-bottom: 16px;
+  }
+  .section-label {
+    font-size: 11px; font-weight: 600; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px;
+  }
 
-    .btn-saved:hover { color: #aaa; }
+  .input-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .input-row input {
+    flex: 1; padding: 11px 16px;
+    border: 1px solid var(--border2); border-radius: 10px;
+    font-size: 16px; font-family: inherit;
+    background: var(--bg); color: var(--text); outline: none;
+    transition: border-color 0.15s;
+  }
+  .input-row input:focus { border-color: var(--accent); }
+  .btn-primary {
+    padding: 11px 22px; background: var(--text); color: #fff;
+    border: none; border-radius: 10px; font-size: 14px;
+    font-weight: 600; cursor: pointer; font-family: inherit;
+    white-space: nowrap; transition: opacity 0.15s;
+  }
+  .btn-primary:hover { opacity: 0.8; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    .btn-saved svg {
-      flex-shrink: 0;
-    }
+  .status {
+    font-size: 13px; color: var(--text2); min-height: 20px;
+    display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
+  }
+  .dot-loader { display: flex; gap: 3px; }
+  .dot {
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--text3); animation: blink 1.2s infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%,80%,100% { opacity:0.2; } 40% { opacity:1; } }
 
-    /* ── Main ── */
-    main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 0 24px;
-      padding-top: 80px;
-    }
+  .ai-preview {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+    display: none; animation: fadeUp 0.3s ease;
+  }
+  .ai-preview.visible { display: block; }
+  @keyframes fadeUp { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform:none; } }
+  .prev-word { font-size: 26px; font-weight: 700; font-style: italic; margin-bottom: 12px; }
+  .ai-label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 12px; margin-bottom: 4px; }
+  .ai-meaning { font-size: 15px; line-height: 1.6; }
+  .ai-example { font-size: 14px; color: var(--text2); font-style: italic; line-height: 1.6; }
+  .save-btn {
+    margin-top: 16px; width: 100%; padding: 11px;
+    background: var(--accent); color: #fff;
+    border: none; border-radius: 10px; font-size: 14px;
+    font-weight: 600; cursor: pointer; font-family: inherit;
+    transition: opacity 0.15s;
+  }
+  .save-btn:hover { opacity: 0.85; }
 
-    /* Logo */
-    .logo {
-      font-family: 'Outfit', sans-serif;
-      font-weight: 800;
-      font-size: 64px;
-      letter-spacing: -1px;
-      color: #4a9eff;
-      margin-bottom: 48px;
-      line-height: 1;
-    }
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .stat-card { background: var(--bg2); border-radius: 12px; padding: 16px; text-align: center; }
+  .stat-num { font-size: 28px; font-weight: 700; }
+  .stat-lbl { font-size: 12px; color: var(--text2); margin-top: 2px; }
 
-    /* Search bar */
-    .search-wrap {
-      width: 100%;
-      max-width: 720px;
-      position: relative;
-      margin-bottom: 48px;
-    }
+  .word-item {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 16px 0; border-bottom: 1px solid var(--border);
+    animation: fadeUp 0.25s ease;
+  }
+  .word-item:last-child { border-bottom: none; }
+  .word-num { font-size: 11px; color: var(--text3); width: 22px; flex-shrink: 0; padding-top: 4px; }
+  .word-body { flex: 1; }
+  .word-en { font-size: 20px; font-weight: 700; font-style: italic; }
+  .word-jp { font-size: 14px; color: var(--text2); margin-top: 3px; }
+  .word-ex { font-size: 13px; color: var(--text3); margin-top: 5px; font-style: italic; }
+  .empty { text-align: center; color: var(--text3); font-size: 14px; padding: 48px 0; line-height: 2; }
 
-    .search-icon {
-      position: absolute;
-      left: 20px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #666;
-      pointer-events: none;
-    }
+  /* Quiz */
+  .score-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 13px; color: var(--text2); margin-bottom: 20px;
+  }
+  .score-val { font-weight: 700; color: var(--text); }
+  .quiz-word { font-size: 44px; font-weight: 700; font-style: italic; text-align: center; margin: 8px 0 28px; }
+  .quiz-hint { font-size: 13px; color: var(--text3); text-align: center; margin-bottom: 16px; }
+  .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .quiz-opt {
+    padding: 16px 14px; border: 1px solid var(--border2);
+    border-radius: 12px; background: var(--bg2); cursor: pointer;
+    font-size: 14px; font-family: inherit; color: var(--text);
+    transition: all 0.15s; text-align: center; line-height: 1.5;
+  }
+  .quiz-opt:hover:not(:disabled) { border-color: var(--text); background: #fff; }
+  .quiz-opt.correct { background: #e8f5e3; border-color: #5a9e3a; color: #2d6e14; }
+  .quiz-opt.wrong { background: #fce8e8; border-color: #e05a5a; color: #a02020; }
+  .quiz-opt:disabled { cursor: default; }
+  .quiz-result { text-align: center; margin-top: 16px; font-size: 14px; color: var(--text2); min-height: 22px; font-weight: 500; }
+  .quiz-next {
+    margin-top: 16px; width: 100%; padding: 13px;
+    background: var(--text); color: #fff;
+    border: none; border-radius: 10px; font-size: 14px;
+    font-weight: 600; cursor: pointer; font-family: inherit;
+    display: none; transition: opacity 0.15s;
+  }
+  .quiz-next.visible { display: block; }
+  .quiz-next:hover { opacity: 0.8; }
 
-    .search-input {
-      width: 100%;
-      background: #252525;
-      border: 1.5px solid #333;
-      border-radius: 50px;
-      padding: 18px 24px 18px 54px;
-      font-size: 16px;
-      color: #ccc;
-      font-family: inherit;
-      outline: none;
-      transition: border-color 0.2s, background 0.2s;
-    }
-
-    .search-input::placeholder { color: #666; }
-
-    .search-input:focus {
-      border-color: #4a9eff;
-      background: #2a2a2a;
-    }
-
-    /* Recent stores */
-    .recent {
-      text-align: center;
-      width: 100%;
-      max-width: 720px;
-    }
-
-    .recent-label {
-      font-size: 12px;
-      color: #666;
-      margin-bottom: 16px;
-      letter-spacing: 0.02em;
-    }
-
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-    }
-
-    .chip {
-      border: 1.5px solid #3a3a3a;
-      border-radius: 50px;
-      padding: 9px 22px;
-      font-size: 14px;
-      color: #999;
-      background: none;
-      cursor: pointer;
-      font-family: inherit;
-      transition: border-color 0.2s, color 0.2s;
-    }
-
-    .chip:hover {
-      border-color: #555;
-      color: #ccc;
-    }
-
-    /* ── Footer ── */
-    footer {
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .data-updated {
-      font-size: 11px;
-      color: #555;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
-
-    .footer-links {
-      display: flex;
-      gap: 24px;
-    }
-
-    .footer-links a {
-      color: #666;
-      text-decoration: underline;
-      font-size: 13px;
-      text-underline-offset: 3px;
-      transition: color 0.2s;
-    }
-
-    .footer-links a:hover { color: #999; }
-  </style>
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(60px);
+    background: var(--text); color: #fff; padding: 10px 22px;
+    border-radius: 50px; font-size: 13px; font-weight: 500;
+    transition: transform 0.3s ease; z-index: 1100; pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  
+  .hidden { display: none !important; }
+</style>
 </head>
 <body>
 
-  <header>
-    <button class="btn-saved">
-      <!-- card icon -->
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="2" y="5" width="20" height="14" rx="2"/>
-        <line x1="2" y1="10" x2="22" y2="10"/>
-      </svg>
-      保有決済
+<div id="login-screen">
+  <div class="login-card">
+    <h1>VocabAI</h1>
+    <p style="color: var(--text2)">AIが導く、新しい英語学習の体験。</p>
+    <button class="btn-google" id="btn-login">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/layout/google.svg" width="18" height="18">
+      Googleでログイン
     </button>
-  </header>
+  </div>
+</div>
 
-  <main>
-    <h1 class="logo">creca</h1>
+<div class="app hidden" id="main-app">
+  <div class="header">
+    <h1>VocabAI</h1>
+    <p>AIが意味と例文を自動生成する英単語学習アプリ</p>
+  </div>
 
-    <div class="search-wrap">
-      <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"/>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <input class="search-input" type="text" placeholder="お店の名前を検索...">
+  <div class="nav">
+    <button class="nav-btn active" id="nav-add" onclick="switchTab('add')">＋ 単語を登録</button>
+    <button class="nav-btn" id="nav-list" onclick="switchTab('list')">📚 一覧</button>
+    <button class="nav-btn" id="nav-quiz" onclick="switchTab('quiz')">🎯 クイズ</button>
+  </div>
+
+  <!-- ADD TAB -->
+  <div id="tab-add">
+    <div class="card">
+      <div class="section-label">英単語を入力してAI生成</div>
+      <div class="input-row">
+        <input type="text" id="word-input" placeholder="例: serendipity, ephemeral..." onkeydown="if(event.key==='Enter') generateWord()" />
+        <button class="btn-primary" id="gen-btn" onclick="generateWord()">AI 生成</button>
+      </div>
+      <div class="status" id="gen-status"></div>
+      <div class="ai-preview" id="ai-preview">
+        <div class="prev-word" id="prev-word"></div>
+        <div class="ai-label">意味（日本語）</div>
+        <div class="ai-meaning" id="prev-meaning"></div>
+        <div class="ai-label">例文</div>
+        <div class="ai-example" id="prev-example"></div>
+        <button class="save-btn" id="save-btn" onclick="saveWord()">✓ 単語帳に保存する</button>
+      </div>
     </div>
 
-    <div class="recent">
-      <p class="recent-label">最近使った店</p>
-      <div class="chips">
-        <button class="chip">スターバックス</button>
-        <button class="chip">マクドナルド</button>
-        <button class="chip">セブン-イレブン</button>
+    <div class="card">
+      <div class="section-label">学習ステータス</div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-num" id="st-total">0</div><div class="stat-lbl">登録単語数</div></div>
+        <div class="stat-card"><div class="stat-num" id="st-correct">0</div><div class="stat-lbl">クイズ正答</div></div>
+        <div class="stat-card"><div class="stat-num" id="st-pct">—</div><div class="stat-lbl">正答率</div></div>
       </div>
     </div>
   </div>
 
-  <div class="toast" id="toast">
-    <span id="toast-icon">✅</span>
-    <span id="toast-message" class="font-bold text-sm tracking-wide"></span>
+  <!-- LIST TAB -->
+  <div id="tab-list" class="hidden">
+    <div class="card">
+      <div class="section-label">登録済み単語</div>
+      <div id="word-list"></div>
+    </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-    import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, signOut, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, query, addDoc, serverTimestamp, where } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+  <!-- QUIZ TAB -->
+  <div id="tab-quiz" class="hidden">
+    <div class="card">
+      <div class="score-bar">
+        <span>問題 <span class="score-val" id="q-num">—</span></span>
+        <span>正解 <span class="score-val" id="q-score">0</span> / <span class="score-val" id="q-total">0</span></span>
+      </div>
+      <div id="quiz-body"></div>
+    </div>
+  </div>
+</div>
 
-    // 1. Firebase構成の取得（自動 & グローバル変数のハイブリッド）
-    async function loadFirebase() {
-      // 以前の環境で使われていたグローバル変数があれば優先
-      if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-        try {
-          return typeof __firebase_config === 'string' ? JSON.parse(__firebase_config) : __firebase_config;
-        } catch(e) { console.error("JSON parse failed for __firebase_config"); }
-      }
+<div class="toast" id="toast"></div>
 
-      // なければ Hosting の自動設定を取得
-      try {
-        const response = await fetch('/__/firebase/init.json');
-        if (response.ok) return await response.json();
-      } catch (e) {
-        console.warn("Firebase auto-init failed, checking fallbacks...");
-      }
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, query, where, onSnapshot, addDoc, serverTimestamp, orderBy } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-      // 最終手段：プロジェクトIDからの推測（API Keyは本来自動取得されるべき）
-      return {
-        apiKey: "", 
-        authDomain: "growth-point-app-2026.firebaseapp.com",
-        projectId: "growth-point-app-2026",
-        storageBucket: "growth-point-app-2026.firebasestorage.app"
-      };
+// --- Firebase Init ---
+async function loadFirebaseConfig() {
+  try {
+    const res = await fetch('/__/firebase/init.json');
+    if (res.ok) return await res.json();
+  } catch(e) {}
+  return {
+    authDomain: "growth-point-app-2026.firebaseapp.com",
+    projectId: "growth-point-app-2026"
+  };
+}
+
+const config = await loadFirebaseConfig();
+const app = initializeApp(config);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const googleProvider = new GoogleAuthProvider();
+
+let currentUser = null;
+let words = [];
+let stats = { correct: 0, total: 0 };
+let pendingWord = null;
+let quizState = {};
+
+// --- Auth ---
+document.getElementById('btn-login').onclick = () => signInWithPopup(auth, googleProvider);
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    currentUser = user;
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('main-app').classList.remove('hidden');
+    syncData();
+  } else {
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('main-app').classList.add('hidden');
+  }
+});
+
+// --- Data Sync ---
+function syncData() {
+  if (!currentUser) return;
+
+  // Sync Profiles (Stats)
+  const profileRef = doc(db, 'profiles', currentUser.uid);
+  onSnapshot(profileRef, (snap) => {
+    if (snap.exists()) {
+      const d = snap.data();
+      stats.correct = d.quiz_correct || 0;
+      stats.total = d.quiz_total || 0;
+      updateStatsUI();
     }
+  });
 
-    const firebaseConfig = await loadFirebase();
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const googleProvider = new GoogleAuthProvider();
+  // Sync Vocab List
+  const q = query(collection(db, 'vocab_list'), where('user_id', '==', currentUser.uid), orderBy('addedAt', 'desc'));
+  onSnapshot(q, (snap) => {
+    words = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    updateStatsUI();
+    if (!document.getElementById('tab-list').classList.contains('hidden')) renderList();
+  });
+}
 
-    let currentUser = null;
-    let userData = { points: 0, streak: 0, level: 1, todayMinutes: 0 };
+function updateStatsUI() {
+  document.getElementById('st-total').textContent = words.length;
+  document.getElementById('st-correct').textContent = stats.correct;
+  document.getElementById('st-pct').textContent = stats.total > 0
+    ? Math.round(stats.correct / stats.total * 100) + '%' : '—';
+}
 
-    const showToast = (msg, icon = '✅') => {
-      const t = document.getElementById('toast');
-      if(t) {
-        document.getElementById('toast-message').textContent = msg;
-        document.getElementById('toast-icon').textContent = icon;
-        t.classList.add('show');
-        setTimeout(() => t.classList.remove('show'), 3000);
-      }
-    };
+// --- UI Actions ---
+window.switchTab = (tab) => {
+  ['add','list','quiz'].forEach(t => {
+    const el = document.getElementById('tab-'+t);
+    const nav = document.getElementById('nav-'+t);
+    if (t === tab) { el.classList.remove('hidden'); nav.classList.add('active'); }
+    else { el.classList.add('hidden'); nav.classList.remove('active'); }
+  });
+  if (tab === 'list') renderList();
+  if (tab === 'quiz') startQuiz();
+};
 
-    const closeModal = (id) => {
-      document.getElementById(id).classList.remove('active');
-    };
+window.showToast = (msg) => {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+};
+
+// --- AI Generation ---
+window.generateWord = async () => {
+  const input = document.getElementById('word-input');
+  const word = input.value.trim();
+  if (!word) return;
+
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true;
+  document.getElementById('ai-preview').classList.remove('visible');
+  const status = document.getElementById('gen-status');
+  status.innerHTML = '<div class="dot-loader"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>&nbsp;AIが意味と例文を生成中...';
+
+  try {
+    const formData = new FormData();
+    formData.append('word', word);
     
-    window.closeModal = closeModal;
-
-    const updateUI = () => {
-      const p = userData.points || 0;
-      document.getElementById('nav-total-points').textContent = p.toLocaleString();
-      document.getElementById('stat-points').textContent = p.toLocaleString();
-      document.getElementById('stat-streak').textContent = userData.streak || 0;
-      document.getElementById('stat-today-minutes').textContent = userData.todayMinutes || 0;
-      
-      const level = Math.floor(p / 100) + 1;
-      document.getElementById('stat-level').textContent = `Lv.${level}`;
-      
-      const progress = p % 100;
-      document.getElementById('level-progress').style.width = `${progress}%`;
-      document.getElementById('level-progress-text').textContent = `NEXT: ${100 - progress} PT`;
-    };
-
-    let myChart = null;
-    const initChart = (history = [30, 45, 20, 60, 40, 90, 30]) => {
-      const ctx = document.getElementById('weekly-chart');
-      if (myChart) myChart.destroy();
-      myChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-          datasets: [{
-            data: history,
-            backgroundColor: '#6366f1',
-            borderRadius: 12,
-            borderSkipped: false,
-            barThickness: 16
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { grid: { display: false }, border: { display: false }, ticks: { font: { weight: '600', size: 10 } } },
-            y: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false }, ticks: { display: false } }
-          }
-        }
-      });
-    };
-
-    async function verifyStudyImage(base64Data, topic) {
-      if (!apiKey) return { isStudy: true, confidence: 0.9, topicDetected: topic, message: "Demo Mode: AI verification skipped." };
-      
-      const prompt = `Learning Verification AI: Analyze this image for proof of studying ${topic}. Return JSON: {isStudy:bool, confidence:number, message:string}`;
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-      
-      try {
-        const res = await fetch(url, {
-          method: 'POST',
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "image/png", data: base64Data.split(',')[1] } }] }]
-          })
-        });
-        const json = await res.json();
-        return JSON.parse(json.candidates[0].content.parts[0].text);
-      } catch (err) {
-        return { isStudy: true, confidence: 0.5, message: "Effort appreciated!" };
-      }
-    }
-
-    const initApp = async (method = 'auto') => {
-      try {
-        if (method === 'google') {
-          await signInWithPopup(auth, googleProvider);
-        } else if (method === 'demo') {
-          await signInAnonymously(auth);
-        }
-      } catch (e) {
-        console.error("Auth Error:", e);
-        const errorMsg = e.code === 'auth/popup-blocked' ? "ポップアップがブロックされました" : "認証失敗: " + e.code;
-        showToast(errorMsg, "❌");
-      }
-    };
-
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        currentUser = user;
-        const root = document.getElementById('app');
-        document.getElementById('login-screen').style.display = 'none';
-        root.classList.remove('hidden');
-        setTimeout(() => root.classList.remove('opacity-0'), 100);
-        
-        // Align with firestore.rules (/profiles/{userId})
-        const userDocRef = doc(db, 'profiles', user.uid);
-        const snap = await getDoc(userDocRef);
-        
-        if (snap.exists()) {
-          const data = snap.data();
-          userData.points = data.total_points || 0;
-          userData.streak = data.streak || 0;
-          userData.todayMinutes = data.todayMinutes || 0;
-        } else {
-          // Initialize profile with required fields for validation
-          await setDoc(userDocRef, {
-            total_points: 0,
-            display_name: user.displayName || "User",
-            streak: 0,
-            todayMinutes: 0
-          });
-        }
-        
-        updateUI();
-        initChart();
-        loadActivities();
-      } else {
-        document.getElementById('login-screen').style.display = 'flex';
-        document.getElementById('app').classList.add('hidden');
-      }
+    const res = await fetch('/api/generate-vocab', {
+      method: 'POST',
+      body: formData
     });
 
-    const saveActivity = async (type, val, msg) => {
-      if (!currentUser) return;
-      
-      // Save to study_logs (/study_logs/{logId})
-      const logRef = collection(db, 'study_logs');
-      await addDoc(logRef, {
-        user_id: currentUser.uid,
-        type, 
-        value: val, 
-        message: msg, 
-        timestamp: serverTimestamp()
-      });
-      
-      userData.points += val;
-      if (type === 'study') userData.todayMinutes += parseInt(document.getElementById('study-duration').value);
-      
-      // Update Profile using allowed path and field names
-      const userDocRef = doc(db, 'profiles', currentUser.uid);
-      await updateDoc(userDocRef, {
-        total_points: userData.points,
-        todayMinutes: userData.todayMinutes,
-        display_name: currentUser.displayName || "User"
-      });
-      updateUI();
-    };
+    if (!res.ok) throw new Error('API error');
+    const parsed = await res.json();
 
-    const loadActivities = () => {
-      // Load from /study_logs where user_id matches
-      const q = query(collection(db, 'study_logs'), where("user_id", "==", currentUser.uid));
-      onSnapshot(q, (snapshot) => {
-        const list = document.getElementById('activity-list');
-        list.innerHTML = '';
-        const docs = snapshot.docs.sort((a, b) => b.data().timestamp?.seconds - a.data().timestamp?.seconds).slice(0, 5);
-        
-        docs.forEach(d => {
-          const data = d.data();
-          const item = document.createElement('div');
-          item.className = 'bg-white p-4 rounded-2xl flex justify-between items-center shadow-sm border border-slate-100 hover:border-indigo-200 transition-all';
-          item.innerHTML = `
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-xl shadow-inner">${data.type === 'study' ? '📖' : '🌅'}</div>
-              <div>
-                <div class="font-bold text-sm text-slate-800">${data.message}</div>
-                <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">${data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleTimeString() : 'Just now'}</div>
-              </div>
-            </div>
-            <div class="text-indigo-600 font-extrabold text-sm tracking-tight">+${data.value}pt</div>
-          `;
-          list.appendChild(item);
-        });
-      });
-    };
+    pendingWord = parsed;
+    document.getElementById('prev-word').textContent = parsed.word;
+    document.getElementById('prev-meaning').textContent = parsed.meaning;
+    document.getElementById('prev-example').textContent =
+      '"' + parsed.example + '" — ' + parsed.example_ja;
+    document.getElementById('ai-preview').classList.add('visible');
+    status.textContent = '';
+  } catch(e) {
+    status.textContent = '⚠ 生成に失敗しました。時間をおいて再度お試しください。';
+    console.error(e);
+  }
+  btn.disabled = false;
+};
 
-    // UI Listeners
-    document.getElementById('btn-login').onclick = () => initApp('google');
-    document.getElementById('btn-demo').onclick = () => initApp('demo');
+window.saveWord = async () => {
+  if (!pendingWord || !currentUser) return;
+  const exists = words.some(w => w.word.toLowerCase() === pendingWord.word.toLowerCase());
+  if (exists) { showToast('この単語はすでに登録されています'); return; }
 
-    document.getElementById('action-morning').onclick = () => document.getElementById('modal-morning').classList.add('active');
-    document.getElementById('action-study').onclick = () => document.getElementById('modal-study').classList.add('active');
-    document.getElementById('fab-record').onclick = () => document.getElementById('modal-study').classList.add('active');
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
 
-    document.getElementById('btn-morning-submit').onclick = async (e) => {
-      const btn = e.target;
-      btn.disabled = true;
-      const time = document.getElementById('wake-up-time').value;
-      const hour = parseInt(time.split(':')[0]);
-      const bonus = hour < 7 ? 15 : 5;
-      
-      await saveActivity('morning', bonus, `${time} Check-in`);
-      showToast(`${bonus} PT EARNED!`, '🌅');
-      closeModal('modal-morning');
-      btn.disabled = false;
-    };
+  try {
+    await addDoc(collection(db, 'vocab_list'), {
+      ...pendingWord,
+      user_id: currentUser.uid,
+      addedAt: serverTimestamp()
+    });
 
-    const fileInput = document.getElementById('study-image');
-    document.getElementById('upload-area').onclick = () => fileInput.click();
-    fileInput.onchange = (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (re) => {
-          document.getElementById('upload-preview').classList.remove('hidden');
-          document.getElementById('preview-img').src = re.target.result;
-        };
-        reader.readAsDataURL(file);
+    document.getElementById('ai-preview').classList.remove('visible');
+    document.getElementById('word-input').value = '';
+    showToast('✓ 保存しました！');
+  } catch(e) {
+    showToast('❌ 保存に失敗しました');
+  }
+  btn.disabled = false;
+  pendingWord = null;
+};
+
+// --- List Render ---
+function renderList() {
+  const el = document.getElementById('word-list');
+  if (words.length === 0) {
+    el.innerHTML = '<div class="empty">まだ単語が登録されていません。<br>「単語を登録」タブから追加してみましょう。</div>';
+    return;
+  }
+  el.innerHTML = words.map((w, i) => `
+    <div class="word-item">
+      <div class="word-num">${i + 1}</div>
+      <div class="word-body">
+        <div class="word-en">${escapeHtml(w.word)}</div>
+        <div class="word-jp">${escapeHtml(w.meaning)}</div>
+        <div class="word-ex">"${escapeHtml(w.example)}"</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// --- Quiz Logic ---
+function startQuiz() {
+  const body = document.getElementById('quiz-body');
+  if (words.length < 4) {
+    body.innerHTML = `<div class="empty">クイズには最低4単語の登録が必要です。<br>あと${4 - words.length}単語登録してみましょう！</div>`;
+    document.getElementById('q-num').textContent = '—';
+    return;
+  }
+  quizState = { score: 0, total: 0, answered: false };
+  document.getElementById('q-score').textContent = '0';
+  document.getElementById('q-total').textContent = '0';
+  nextQuestion();
+}
+
+window.nextQuestion = () => {
+  quizState.answered = false;
+  const shuffled = [...words].sort(() => Math.random() - 0.5);
+  const correct = shuffled[0];
+  const choices = shuffled.slice(0, 4).sort(() => Math.random() - 0.5);
+  quizState.correct = correct;
+  quizState.total++;
+  document.getElementById('q-num').textContent = quizState.total;
+
+  document.getElementById('quiz-body').innerHTML = `
+    <div class="quiz-hint">次の単語の正しい意味はどれ？</div>
+    <div class="quiz-word">${escapeHtml(correct.word)}</div>
+    <div class="quiz-options" id="quiz-opts">
+      ${choices.map(c => `
+        <button class="quiz-opt" onclick="answerQuiz(this, '${escapeHtml(c.word)}')">
+          ${escapeHtml(c.meaning)}
+        </button>
+      `).join('')}
+    </div>
+    <div class="quiz-result" id="quiz-result"></div>
+    <button class="quiz-next" id="quiz-next" onclick="nextQuestion()">次の問題へ →</button>
+  `;
+};
+
+window.answerQuiz = async (btn, selectedWord) => {
+  if (quizState.answered) return;
+  quizState.answered = true;
+
+  document.querySelectorAll('.quiz-opt').forEach(b => b.disabled = true);
+  const isCorrect = selectedWord === quizState.correct.word;
+  btn.classList.add(isCorrect ? 'correct' : 'wrong');
+
+  if (!isCorrect) {
+    document.querySelectorAll('.quiz-opt').forEach(b => {
+      if (b.textContent.trim() === quizState.correct.meaning.trim()) {
+        b.classList.add('correct');
       }
-    };
+    });
+  }
 
-    document.getElementById('btn-study-submit').onclick = async (e) => {
-      const btn = e.target;
-      const iris = document.getElementById('iris-scan');
-      const duration = document.getElementById('study-duration').value;
-      const topic = document.getElementById('study-topic').value;
-      const previewImg = document.getElementById('preview-img').src;
+  if (isCorrect) quizState.score++;
+  
+  // Update Firestore Stats
+  const profileRef = doc(db, 'profiles', currentUser.uid);
+  const snap = await getDoc(profileRef);
+  const currentCorrect = (snap.exists() ? snap.data().quiz_correct : 0) || 0;
+  const currentTotal = (snap.exists() ? snap.data().quiz_total : 0) || 0;
+  
+  await setDoc(profileRef, {
+    quiz_correct: currentCorrect + (isCorrect ? 1 : 0),
+    quiz_total: currentTotal + 1,
+    last_active: serverTimestamp()
+  }, { merge: true });
 
-      if (!previewImg || previewImg.includes('index.html')) {
-        showToast('Capture your proof!', '⚠️');
-        return;
-      }
-
-      btn.disabled = true;
-      iris.style.display = "block";
-
-      const aiResult = await verifyStudyImage(previewImg, topic);
-      
-      iris.style.display = "none";
-      btn.disabled = false;
-
-      if (aiResult.isStudy) {
-        const points = Math.floor(duration / 10) + 10;
-        await saveActivity('study', points, `${topic} ${duration}min`);
-        showToast(`AI VERIFIED! +${points}PT`, '✨');
-        closeModal('modal-study');
-      } else {
-        showToast('AI could not verify content', '❌');
-      }
-    };
-
+  document.getElementById('q-score').textContent = quizState.score;
+  document.getElementById('q-total').textContent = quizState.total;
+  document.getElementById('quiz-result').textContent = isCorrect
+    ? '🎉 正解！'
+    : '❌ 不正解 — 正しくは「' + quizState.correct.meaning + '」';
+  document.getElementById('quiz-next').classList.add('visible');
+};
+</script>
 </body>
 </html>

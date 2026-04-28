@@ -100,6 +100,41 @@ async def verify_study(
         print(f"Gemini API Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# 英単語生成エンドポイント
+@app.post("/api/generate-vocab")
+async def generate_vocab(word: str = Form(...)):
+    if not GEMINI_API_KEY:
+        raise HTTPException(status_code=500, detail="Gemini API Key not configured")
+
+    try:
+        prompt = f"""
+        You are a helpful English vocabulary teacher. 
+        When given an English word, respond ONLY with valid JSON in this exact format:
+        {{
+          "word": "{word}",
+          "meaning": "日本語での意味（1-2文）",
+          "example": "Natural English example sentence using the word",
+          "example_ja": "例文の日本語訳"
+        }}
+        
+        Word: {word}
+        """
+
+        response = model.generate_content(prompt)
+        text_response = response.text
+        
+        # JSON抽出ロジック
+        if "```json" in text_response:
+            text_response = text_response.split("```json")[1].split("```")[0].strip()
+        elif "```" in text_response:
+            text_response = text_response.split("```")[1].split("```")[0].strip()
+        
+        return json.loads(text_response)
+
+    except Exception as e:
+        print(f"Vocab Generation Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # 静的ファイル配信（フロントエンド）
 # /static をマウントし、ルート (/) へのアクセスで index.html を表示
 static_dir = os.path.join(os.path.dirname(__file__), "static")
