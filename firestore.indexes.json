@@ -1,26 +1,51 @@
 {
   "indexes": [
     {
-      "collectionGroup": "study_logs",
+      "collectionGroup": "asakatsu_sessions",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "user_id", "order": "ASCENDING" },
-        { "fieldPath": "created_at", "order": "DESCENDING" }
+        { "fieldPath": "groupId",   "order": "ASCENDING" },
+        { "fieldPath": "startTime", "order": "DESCENDING" }
       ]
     },
     {
-      "collectionGroup": "point_transactions",
+      "collectionGroup": "asakatsu_sessions",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "user_id", "order": "ASCENDING" },
-        { "fieldPath": "created_at", "order": "DESCENDING" }
+        { "fieldPath": "userId",  "order": "ASCENDING" },
+        { "fieldPath": "isActive","order": "ASCENDING" }
       ]
     },
     {
-      "collectionGroup": "user_missions",
+      "collectionGroup": "asakatsu_sessions",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "user_id", "order": "ASCENDING" }
+        { "fieldPath": "userId",   "order": "ASCENDING" },
+        { "fieldPath": "isActive", "order": "ASCENDING" },
+        { "fieldPath": "endTime",  "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "asakatsu_sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "spotId",  "order": "ASCENDING" },
+        { "fieldPath": "isActive","order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "asakatsu_spots",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "groupId",   "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "asakatsu_groups",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "code", "order": "ASCENDING" }
       ]
     }
   ],
