@@ -1,41 +1,42 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    // データ型のバリデーション関数
-    function isValidProfile(data) {
-      return data.total_points is number && data.total_points >= 0
-          && data.nickname is string;
-    }
 
-    // ログイン済みユーザーのみプロフィールを読み書き可能（自分のみ）
-    match /profiles/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
+    // ── ユーザープロフィール ──
+    // 全員読める（グループメンバー表示のため）、書けるのは本人のみ
+    match /asakatsu_users/{userId} {
+      allow read: if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == userId;
     }
-    
-    // 学習ログ: 自分のものだけ読み書き可能
-    match /study_logs/{logId} {
-      allow create: if request.auth != null && request.resource.data.user_id == request.auth.uid;
-      allow read, update, delete: if request.auth != null && resource.data.user_id == request.auth.uid;
+
+    // ── グループ ──
+    // 読み: 認証済みなら誰でも（コード検索のため）
+    // 作成: 認証済みならOK
+    // 更新: メンバーのみ（メンバー追加時など）
+    match /asakatsu_groups/{groupId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null
+        && request.auth.uid in resource.data.memberIds;
     }
-    
-    // 単語帳: 自分のものだけ読み書き可能
-    match /vocab_list/{vocabId} {
-      allow create: if request.auth != null && request.resource.data.user_id == request.auth.uid;
-      allow read, update, delete: if request.auth != null && resource.data.user_id == request.auth.uid;
+
+    // ── スポット ──
+    // 読み書き: 認証済みならOK（グループIDで絞り込みはアプリ側で担保）
+    match /asakatsu_spots/{spotId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
     }
-    
-    // ポイント履歴: 自分のものだけ読み書き可能
-    match /point_transactions/{txnId} {
-      allow create: if request.auth != null && request.resource.data.user_id == request.auth.uid;
-      allow read, update, delete: if request.auth != null && resource.data.user_id == request.auth.uid;
-    }
-    
-    // ミッション進捗: 自分のものだけ読み書き可能
-    match /user_missions/{missionId} {
-      allow create: if request.auth != null && request.resource.data.user_id == request.auth.uid;
-      allow read, update, delete: if request.auth != null && resource.data.user_id == request.auth.uid;
+
+    // ── セッション ──
+    // 読み: 認証済みなら誰でも（グループ全員の今日の状況表示のため）
+    // 作成・更新: 本人のみ
+    match /asakatsu_sessions/{sessionId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.userId;
+      allow update: if request.auth != null
+        && request.auth.uid == resource.data.userId;
     }
   }
 }

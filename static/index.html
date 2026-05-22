@@ -2,518 +2,1267 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VocabAI — AI英単語帳</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>朝活ポイント</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #faf9f7;
-    --bg2: #f2f0ec;
-    --bg3: #e8e5df;
-    --text: #1a1816;
-    --text2: #6b6560;
-    --text3: #a09a93;
-    --border: rgba(0,0,0,0.1);
-    --border2: rgba(0,0,0,0.2);
-    --accent: #2c4a2e;
-    --accent-bg: #e8f0e8;
-  }
-  body {
-    font-family: 'Georgia', serif;
-    background: var(--bg);
-    min-height: 100vh;
-    color: var(--text);
-  }
-  .app { max-width: 760px; margin: 0 auto; padding: 32px 20px 80px; }
+:root {
+  --dawn: #FF6B35;
+  --sunrise: #FFB347;
+  --sky: #87CEEB;
+  --mint: #5BC98A;
+  --bg: #FFFDF9;
+  --bg2: #FFF5E4;
+  --text: #2C2316;
+  --text2: #8C7B6B;
+  --text3: #B8A898;
+  --border: rgba(44,35,22,0.09);
+  --card: rgba(255,255,255,0.95);
+  --r: 16px;
+  --r-sm: 10px;
+  --shadow: 0 2px 12px rgba(255,107,53,0.08);
+  --shadow-lg: 0 8px 32px rgba(255,107,53,0.14);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  font-family: -apple-system, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.hidden { display: none !important; }
 
-  /* Login Screen */
-  #login-screen {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: var(--bg); display: flex; flex-direction: column;
-    align-items: center; justify-content: center; z-index: 1000;
-  }
-  .login-card { text-align: center; max-width: 400px; padding: 40px; }
-  .login-card h1 { font-size: 48px; font-style: italic; margin-bottom: 16px; }
-  .btn-google {
-    padding: 14px 28px; background: #fff; border: 1px solid var(--border2);
-    border-radius: 50px; font-weight: 600; cursor: pointer;
-    display: flex; align-items: center; gap: 12px; margin-top: 24px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.2s;
-  }
-  .btn-google:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+/* ── Onboarding ── */
+#onboarding { min-height: 100vh; }
+.ob-step {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 40px 24px 32px;
+}
+.ob-logo { font-size: 56px; text-align: center; margin-bottom: 12px; }
+.ob-title { font-size: 28px; font-weight: 800; text-align: center; letter-spacing: -0.5px; margin-bottom: 8px; }
+.ob-sub { font-size: 14px; color: var(--text2); text-align: center; line-height: 1.75; margin-bottom: 32px; }
 
-  .header { text-align: center; margin-bottom: 36px; }
-  .header h1 {
-    font-size: 42px; font-weight: 700; letter-spacing: -1.5px;
-    color: var(--text); font-style: italic;
-  }
-  .header p { font-size: 14px; color: var(--text2); margin-top: 6px; }
+.feature-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: auto; }
+.feature-item {
+  background: var(--bg2);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.feature-item .fi-icon { font-size: 24px; flex-shrink: 0; }
+.feature-item .fi-text { font-size: 14px; font-weight: 600; }
+.feature-item .fi-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
 
-  .nav {
-    display: flex; gap: 4px;
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: 14px; padding: 4px; margin-bottom: 24px;
-  }
-  .nav-btn {
-    flex: 1; padding: 10px 8px; border: none;
-    background: transparent; border-radius: 10px;
-    cursor: pointer; font-size: 14px; font-weight: 500;
-    color: var(--text2); transition: all 0.15s; font-family: inherit;
-  }
-  .nav-btn.active {
-    background: #fff; color: var(--text);
-    border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  }
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.avatar-btn {
+  aspect-ratio: 1;
+  font-size: 30px;
+  background: var(--bg2);
+  border: 2px solid transparent;
+  border-radius: var(--r);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.avatar-btn.sel { border-color: var(--dawn); background: #FFF0EA; transform: scale(1.06); }
 
-  .card {
-    background: #fff; border: 1px solid var(--border);
-    border-radius: 16px; padding: 24px; margin-bottom: 16px;
-  }
-  .section-label {
-    font-size: 11px; font-weight: 600; color: var(--text3);
-    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px;
-  }
+.lbl { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; display: block; }
+.inp {
+  width: 100%;
+  padding: 13px 15px;
+  font-size: 16px;
+  font-family: inherit;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--card);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.inp:focus { border-color: var(--dawn); }
+.ig { margin-bottom: 18px; }
 
-  .input-row { display: flex; gap: 8px; margin-bottom: 12px; }
-  .input-row input {
-    flex: 1; padding: 11px 16px;
-    border: 1px solid var(--border2); border-radius: 10px;
-    font-size: 16px; font-family: inherit;
-    background: var(--bg); color: var(--text); outline: none;
-    transition: border-color 0.15s;
-  }
-  .input-row input:focus { border-color: var(--accent); }
-  .btn-primary {
-    padding: 11px 22px; background: var(--text); color: #fff;
-    border: none; border-radius: 10px; font-size: 14px;
-    font-weight: 600; cursor: pointer; font-family: inherit;
-    white-space: nowrap; transition: opacity 0.15s;
-  }
-  .btn-primary:hover { opacity: 0.8; }
-  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn {
+  width: 100%;
+  padding: 15px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: inherit;
+  border: none;
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-p {
+  background: linear-gradient(135deg, var(--dawn) 0%, var(--sunrise) 100%);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(255,107,53,0.3);
+}
+.btn-p:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(255,107,53,0.4); }
+.btn-p:active { transform: none; }
+.btn-p:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+.btn-s {
+  background: var(--bg2);
+  color: var(--text);
+  border: 1.5px solid var(--border);
+  font-size: 14px;
+  padding: 13px;
+}
+.btn-s:hover { background: #FFE8D4; border-color: var(--dawn); }
 
-  .status {
-    font-size: 13px; color: var(--text2); min-height: 20px;
-    display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
-  }
-  .dot-loader { display: flex; gap: 3px; }
-  .dot {
-    width: 4px; height: 4px; border-radius: 50%;
-    background: var(--text3); animation: blink 1.2s infinite;
-  }
-  .dot:nth-child(2) { animation-delay: 0.2s; }
-  .dot:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes blink { 0%,80%,100% { opacity:0.2; } 40% { opacity:1; } }
+.divider { display: flex; align-items: center; gap: 10px; margin: 16px 0; font-size: 13px; color: var(--text3); }
+.divider::before, .divider::after { content:''; flex: 1; height: 1px; background: var(--border); }
 
-  .ai-preview {
-    background: var(--bg); border: 1px solid var(--border);
-    border-radius: 12px; padding: 20px;
-    display: none; animation: fadeUp 0.3s ease;
-  }
-  .ai-preview.visible { display: block; }
-  @keyframes fadeUp { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform:none; } }
-  .prev-word { font-size: 26px; font-weight: 700; font-style: italic; margin-bottom: 12px; }
-  .ai-label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 12px; margin-bottom: 4px; }
-  .ai-meaning { font-size: 15px; line-height: 1.6; }
-  .ai-example { font-size: 14px; color: var(--text2); font-style: italic; line-height: 1.6; }
-  .save-btn {
-    margin-top: 16px; width: 100%; padding: 11px;
-    background: var(--accent); color: #fff;
-    border: none; border-radius: 10px; font-size: 14px;
-    font-weight: 600; cursor: pointer; font-family: inherit;
-    transition: opacity 0.15s;
-  }
-  .save-btn:hover { opacity: 0.85; }
+/* code display */
+.code-box {
+  background: var(--bg2);
+  border: 2px dashed var(--dawn);
+  border-radius: var(--r);
+  padding: 20px;
+  text-align: center;
+  margin: 14px 0;
+}
+.code-box .code-lbl { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+.code-box .code-val { font-size: 34px; font-weight: 800; letter-spacing: 8px; color: var(--dawn); }
+.code-box .code-hint { font-size: 12px; color: var(--text2); margin-top: 8px; }
 
-  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  .stat-card { background: var(--bg2); border-radius: 12px; padding: 16px; text-align: center; }
-  .stat-num { font-size: 28px; font-weight: 700; }
-  .stat-lbl { font-size: 12px; color: var(--text2); margin-top: 2px; }
+/* ── Main App ── */
+#app { display: flex; flex-direction: column; min-height: 100vh; }
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(255,253,249,0.96);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 11px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.topbar-logo { font-size: 17px; font-weight: 800; color: var(--dawn); }
+.topbar-group { font-size: 12px; color: var(--text2); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.topbar-pts { font-size: 13px; font-weight: 700; color: var(--dawn); background: #FFF0EA; padding: 4px 11px; border-radius: 20px; }
 
-  .word-item {
-    display: flex; align-items: flex-start; gap: 14px;
-    padding: 16px 0; border-bottom: 1px solid var(--border);
-    animation: fadeUp 0.25s ease;
-  }
-  .word-item:last-child { border-bottom: none; }
-  .word-num { font-size: 11px; color: var(--text3); width: 22px; flex-shrink: 0; padding-top: 4px; }
-  .word-body { flex: 1; }
-  .word-en { font-size: 20px; font-weight: 700; font-style: italic; }
-  .word-jp { font-size: 14px; color: var(--text2); margin-top: 3px; }
-  .word-ex { font-size: 13px; color: var(--text3); margin-top: 5px; font-style: italic; }
-  .empty { text-align: center; color: var(--text3); font-size: 14px; padding: 48px 0; line-height: 2; }
+.tabs {
+  display: flex;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 0;
+}
+.tab-btn {
+  flex: 1;
+  padding: 10px 4px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: inherit;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text3);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition: all 0.15s;
+}
+.tab-btn .ti { font-size: 20px; }
+.tab-btn.active { color: var(--dawn); border-bottom-color: var(--dawn); }
 
-  /* Quiz */
-  .score-bar {
-    display: flex; justify-content: space-between; align-items: center;
-    font-size: 13px; color: var(--text2); margin-bottom: 20px;
-  }
-  .score-val { font-weight: 700; color: var(--text); }
-  .quiz-word { font-size: 44px; font-weight: 700; font-style: italic; text-align: center; margin: 8px 0 28px; }
-  .quiz-hint { font-size: 13px; color: var(--text3); text-align: center; margin-bottom: 16px; }
-  .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .quiz-opt {
-    padding: 16px 14px; border: 1px solid var(--border2);
-    border-radius: 12px; background: var(--bg2); cursor: pointer;
-    font-size: 14px; font-family: inherit; color: var(--text);
-    transition: all 0.15s; text-align: center; line-height: 1.5;
-  }
-  .quiz-opt:hover:not(:disabled) { border-color: var(--text); background: #fff; }
-  .quiz-opt.correct { background: #e8f5e3; border-color: #5a9e3a; color: #2d6e14; }
-  .quiz-opt.wrong { background: #fce8e8; border-color: #e05a5a; color: #a02020; }
-  .quiz-opt:disabled { cursor: default; }
-  .quiz-result { text-align: center; margin-top: 16px; font-size: 14px; color: var(--text2); min-height: 22px; font-weight: 500; }
-  .quiz-next {
-    margin-top: 16px; width: 100%; padding: 13px;
-    background: var(--text); color: #fff;
-    border: none; border-radius: 10px; font-size: 14px;
-    font-weight: 600; cursor: pointer; font-family: inherit;
-    display: none; transition: opacity 0.15s;
-  }
-  .quiz-next.visible { display: block; }
-  .quiz-next:hover { opacity: 0.8; }
+.tab-content { flex: 1; overflow-y: auto; }
+.pane { padding: 14px 14px 80px; }
 
-  .toast {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(60px);
-    background: var(--text); color: #fff; padding: 10px 22px;
-    border-radius: 50px; font-size: 13px; font-weight: 500;
-    transition: transform 0.3s ease; z-index: 1100; pointer-events: none;
-  }
-  .toast.show { transform: translateX(-50%) translateY(0); }
-  
-  .hidden { display: none !important; }
+/* ── Home pane ── */
+.home-hero {
+  background: linear-gradient(135deg, var(--dawn) 0%, var(--sunrise) 100%);
+  border-radius: var(--r);
+  padding: 18px 20px;
+  color: #fff;
+  margin-bottom: 14px;
+  position: relative;
+  overflow: hidden;
+}
+.home-hero::after { content:'☀️'; position:absolute; right:12px; bottom:-8px; font-size:60px; opacity:0.2; pointer-events:none; }
+.home-hero .hh-greet { font-size: 12px; opacity: 0.85; margin-bottom: 4px; }
+.home-hero .hh-pts { font-size: 38px; font-weight: 800; letter-spacing: -1.5px; }
+.home-hero .hh-unit { font-size: 16px; font-weight: 500; margin-left: 4px; opacity: 0.85; }
+.home-hero .hh-streak { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+
+.sec-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.badge { font-size: 10px; font-weight: 700; background: var(--dawn); color: #fff; padding: 2px 8px; border-radius: 20px; text-transform: none; letter-spacing: 0; }
+
+/* Active session banner */
+.sess-card {
+  background: linear-gradient(135deg, #E8F8F0 0%, #D4F4E7 100%);
+  border: 1.5px solid var(--mint);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+.sess-status { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; color: #1E7A4A; margin-bottom: 6px; }
+.pulse { width: 7px; height: 7px; background: var(--mint); border-radius: 50%; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.5);opacity:0.5;} }
+.sess-spot { font-size: 19px; font-weight: 800; margin-bottom: 4px; }
+.sess-timer { font-size: 34px; font-weight: 700; color: #1E7A4A; font-variant-numeric: tabular-nums; letter-spacing: -1px; margin-bottom: 10px; }
+.btn-out {
+  width: 100%; padding: 11px; font-size: 14px; font-weight: 700; font-family: inherit;
+  background: var(--mint); color: #fff; border: none; border-radius: var(--r-sm);
+  cursor: pointer; transition: background 0.15s;
+}
+.btn-out:hover { background: #27AE60; }
+
+/* Member feed */
+.member-row {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 8px;
+  transition: border-color 0.15s;
+}
+.member-row.on { border-color: var(--mint); background: #F5FBF8; }
+.av { width: 42px; height: 42px; border-radius: 50%; background: var(--bg2); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.m-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+.m-status { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 4px; }
+.m-status.on { color: #1E7A4A; font-weight: 600; }
+.m-pts { margin-left: auto; text-align: right; flex-shrink: 0; }
+.m-pts-val { font-size: 15px; font-weight: 700; color: var(--dawn); display: block; }
+.m-pts-lbl { font-size: 11px; color: var(--text3); }
+
+/* ── Check-in pane ── */
+.ci-hero { text-align: center; padding: 20px 0 14px; }
+.ci-hero .ci-icon { font-size: 60px; margin-bottom: 10px; }
+.ci-hero h2 { font-size: 21px; font-weight: 800; margin-bottom: 6px; }
+.ci-hero p { font-size: 13px; color: var(--text2); line-height: 1.7; }
+
+.gps-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 13px; border-radius: var(--r-sm);
+  font-size: 12px; font-weight: 600; margin-bottom: 14px;
+}
+.gps-bar.ok { background: #E8F8F0; color: #1E7A4A; }
+.gps-bar.search { background: #FFF5E4; color: #B36200; }
+.gps-bar.err { background: #FEE8E8; color: #C0392B; }
+
+.nearby-spot {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 13px 14px;
+  display: flex; align-items: center; gap: 11px;
+  margin-bottom: 9px; cursor: pointer; transition: all 0.15s;
+}
+.nearby-spot:hover { border-color: var(--dawn); background: #FFF8F5; }
+.ns-icon { font-size: 26px; }
+.ns-name { font-size: 14px; font-weight: 700; }
+.ns-dist { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.ns-arr { margin-left: auto; color: var(--text3); }
+
+.btn-ci {
+  width: 100%; padding: 18px; font-size: 17px; font-weight: 800; font-family: inherit;
+  background: linear-gradient(135deg, var(--dawn) 0%, var(--sunrise) 100%);
+  color: #fff; border: none; border-radius: var(--r); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  box-shadow: 0 6px 22px rgba(255,107,53,0.32); transition: all 0.2s; margin-top: 6px;
+}
+.btn-ci:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(255,107,53,0.42); }
+.btn-ci:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+/* co-attendees */
+.coatt { font-size: 12px; color: #1E7A4A; font-weight: 600; margin-bottom: 10px; padding: 8px 12px; background: rgba(91,201,138,0.12); border-radius: var(--r-sm); }
+
+/* ── Spots pane ── */
+.btn-add {
+  width: 100%; padding: 13px; font-size: 14px; font-weight: 700; font-family: inherit;
+  background: var(--card); border: 2px dashed var(--dawn); border-radius: var(--r);
+  color: var(--dawn); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  gap: 7px; margin-bottom: 14px; transition: background 0.15s;
+}
+.btn-add:hover { background: #FFF0EA; }
+
+.spot-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 14px; margin-bottom: 10px;
+}
+.spot-head { display: flex; align-items: flex-start; gap: 11px; margin-bottom: 10px; }
+.spot-big { font-size: 32px; }
+.spot-name { font-size: 16px; font-weight: 800; margin-bottom: 2px; }
+.spot-sub { font-size: 11px; color: var(--text2); }
+.spot-stats { display: flex; gap: 14px; padding-top: 10px; border-top: 1px solid var(--border); }
+.sstat { font-size: 11px; color: var(--text2); }
+.sstat strong { font-size: 15px; font-weight: 700; color: var(--text); display: block; }
+
+/* ── Ranking pane ── */
+.rank-row {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 12px 14px;
+  display: flex; align-items: center; gap: 11px; margin-bottom: 9px;
+}
+.rank-row.me { border-color: var(--dawn); background: #FFF8F5; }
+.rank-n { font-size: 18px; font-weight: 800; color: var(--text3); width: 26px; text-align: center; flex-shrink: 0; }
+.rank-n.g { color: #F0A500; }
+.rank-n.s { color: #9EA3A8; }
+.rank-n.b { color: #CD7F32; }
+.rank-name { font-size: 14px; font-weight: 700; flex: 1; }
+.rank-pts { font-size: 17px; font-weight: 800; color: var(--dawn); white-space: nowrap; }
+.rank-pts span { font-size: 11px; font-weight: 500; color: var(--text2); }
+
+.my-stats {
+  background: var(--bg2); border-radius: var(--r); padding: 14px; margin-top: 14px;
+}
+.my-stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; text-align: center; margin-top: 10px; }
+.ms-val { font-size: 22px; font-weight: 800; color: var(--dawn); }
+.ms-lbl { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+.hist-item {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 11px 13px;
+  display: flex; align-items: flex-start; gap: 10px; margin-bottom: 7px;
+}
+.hi-icon { font-size: 22px; flex-shrink: 0; }
+.hi-spot { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+.hi-meta { font-size: 11px; color: var(--text2); }
+.hi-pts { margin-left: auto; font-size: 14px; font-weight: 700; color: var(--dawn); white-space: nowrap; }
+
+/* ── Modal (bottom sheet) ── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.38);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex; align-items: flex-end;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.22s;
+}
+.overlay.open { opacity: 1; pointer-events: all; }
+.sheet {
+  background: var(--bg);
+  border-radius: 22px 22px 0 0;
+  padding: 20px 18px 36px;
+  width: 100%; max-height: 85vh; overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1);
+}
+.overlay.open .sheet { transform: translateY(0); }
+.sheet-handle { width: 38px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 18px; }
+.sheet-title { font-size: 19px; font-weight: 800; margin-bottom: 18px; }
+
+/* ── Toast ── */
+.toast {
+  position: fixed; bottom: 90px; left: 50%;
+  transform: translateX(-50%) translateY(16px);
+  background: rgba(44,35,22,0.92);
+  color: #fff; padding: 11px 22px; border-radius: 50px;
+  font-size: 13px; font-weight: 600; opacity: 0;
+  transition: all 0.28s; z-index: 200; white-space: nowrap; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── Empty state ── */
+.empty { text-align: center; padding: 32px 20px; color: var(--text2); }
+.empty .ei { font-size: 44px; margin-bottom: 10px; }
+.empty p { font-size: 13px; line-height: 1.75; }
 </style>
 </head>
 <body>
 
-<div id="login-screen">
-  <div class="login-card">
-    <h1>VocabAI</h1>
-    <p style="color: var(--text2)">AIが導く、新しい英語学習の体験。</p>
-    <button class="btn-google" id="btn-login">
-      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/layout/google.svg" width="18" height="18">
-      Googleでログイン
-    </button>
+<!-- ████ ONBOARDING ████ -->
+<div id="onboarding">
+
+  <!-- Step 1: Welcome -->
+  <div id="ob1" class="ob-step">
+    <div class="ob-logo">🌅</div>
+    <div class="ob-title">朝活ポイント</div>
+    <div class="ob-sub">仲間と一緒に朝活スポットへ。<br>スマホを持っていくだけで記録とポイントが貯まる。</div>
+    <div class="feature-list">
+      <div class="feature-item">
+        <div class="fi-icon">✅</div>
+        <div><div class="fi-text">入力ゼロ</div><div class="fi-sub">スポットに着くだけで自動記録</div></div>
+      </div>
+      <div class="feature-item">
+        <div class="fi-icon">👥</div>
+        <div><div class="fi-text">仲間と共に</div><div class="fi-sub">グループで朝活を記録・競い合う</div></div>
+      </div>
+      <div class="feature-item">
+        <div class="fi-icon">🏆</div>
+        <div><div class="fi-text">スポットを育てる</div><div class="fi-sub">お気に入りの場所がマップに蓄積</div></div>
+      </div>
+    </div>
+    <button class="btn btn-p" onclick="goStep(2)" style="margin-top:28px;">はじめる →</button>
+  </div>
+
+  <!-- Step 2: Profile -->
+  <div id="ob2" class="ob-step hidden">
+    <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">ステップ 1 / 2</div>
+    <div style="font-size:22px;font-weight:800;margin-bottom:6px;">プロフィール設定</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:22px;line-height:1.7;">アバターとニックネームを選んでください。</div>
+    <span class="lbl">アバター</span>
+    <div class="avatar-grid" id="av-grid"></div>
+    <div class="ig">
+      <label class="lbl" for="nick-inp">ニックネーム</label>
+      <input type="text" id="nick-inp" class="inp" placeholder="例：たろう、みかん、朝活マン" maxlength="20">
+    </div>
+    <div style="margin-top:auto;padding-top:16px;">
+      <button class="btn btn-p" id="ob2-next" onclick="submitProfile()" disabled>次へ →</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Group -->
+  <div id="ob3" class="ob-step hidden">
+    <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">ステップ 2 / 2</div>
+    <div style="font-size:22px;font-weight:800;margin-bottom:6px;">グループに参加</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:22px;line-height:1.7;">新しいグループを作るか、仲間のコードで参加しましょう。</div>
+
+    <div id="grp-choice">
+      <button class="btn btn-p" onclick="showCreate()" style="margin-bottom:12px;">新しいグループを作る</button>
+      <div class="divider">または</div>
+      <div class="ig">
+        <label class="lbl" for="join-inp">グループコード（6文字）</label>
+        <input type="text" id="join-inp" class="inp" placeholder="例：ABC123" maxlength="6"
+          style="text-transform:uppercase;letter-spacing:4px;font-size:22px;text-align:center;">
+      </div>
+      <button class="btn btn-s" id="join-btn" onclick="joinGroup()" disabled>コードで参加する</button>
+    </div>
+
+    <div id="grp-create" class="hidden">
+      <div class="ig">
+        <label class="lbl" for="grp-name">グループ名</label>
+        <input type="text" id="grp-name" class="inp" placeholder="例：チーム朝活、月曜カフェ班" maxlength="30">
+      </div>
+      <button class="btn btn-p" id="create-btn" onclick="createGroup()" disabled>グループを作成</button>
+      <div style="height:10px;"></div>
+      <button class="btn btn-s" onclick="hideCreate()">← 戻る</button>
+    </div>
   </div>
 </div>
 
-<div class="app hidden" id="main-app">
-  <div class="header">
-    <h1>VocabAI</h1>
-    <p>AIが意味と例文を自動生成する英単語学習アプリ</p>
+<!-- ████ MAIN APP ████ -->
+<div id="app" class="hidden">
+  <div class="topbar">
+    <div class="topbar-logo">🌅 朝活</div>
+    <div class="topbar-group" id="tb-group">—</div>
+    <div class="topbar-pts" id="tb-pts">0 pt</div>
   </div>
-
-  <div class="nav">
-    <button class="nav-btn active" id="nav-add" onclick="switchTab('add')">＋ 単語を登録</button>
-    <button class="nav-btn" id="nav-list" onclick="switchTab('list')">📚 一覧</button>
-    <button class="nav-btn" id="nav-quiz" onclick="switchTab('quiz')">🎯 クイズ</button>
+  <div class="tabs">
+    <button class="tab-btn active" id="t-home" onclick="tab('home')"><span class="ti">🏠</span>ホーム</button>
+    <button class="tab-btn" id="t-ci" onclick="tab('ci')"><span class="ti">📍</span>チェックイン</button>
+    <button class="tab-btn" id="t-spots" onclick="tab('spots')"><span class="ti">🗺️</span>スポット</button>
+    <button class="tab-btn" id="t-rank" onclick="tab('rank')"><span class="ti">🏆</span>ランキング</button>
   </div>
+  <div class="tab-content">
 
-  <!-- ADD TAB -->
-  <div id="tab-add">
-    <div class="card">
-      <div class="section-label">英単語を入力してAI生成</div>
-      <div class="input-row">
-        <input type="text" id="word-input" placeholder="例: serendipity, ephemeral..." onkeydown="if(event.key==='Enter') generateWord()" />
-        <button class="btn-primary" id="gen-btn" onclick="generateWord()">AI 生成</button>
+    <!-- HOME -->
+    <div id="p-home" class="pane">
+      <div class="home-hero">
+        <div class="hh-greet" id="hh-greet">おはようございます</div>
+        <div><span class="hh-pts" id="hh-pts">0</span><span class="hh-unit">pt</span></div>
+        <div class="hh-streak" id="hh-streak"></div>
       </div>
-      <div class="status" id="gen-status"></div>
-      <div class="ai-preview" id="ai-preview">
-        <div class="prev-word" id="prev-word"></div>
-        <div class="ai-label">意味（日本語）</div>
-        <div class="ai-meaning" id="prev-meaning"></div>
-        <div class="ai-label">例文</div>
-        <div class="ai-example" id="prev-example"></div>
-        <button class="save-btn" id="save-btn" onclick="saveWord()">✓ 単語帳に保存する</button>
+      <div id="home-sess"></div>
+      <div class="sec-title">今日の朝活 <span class="badge" id="act-cnt">0人</span></div>
+      <div id="member-feed"><div class="empty"><div class="ei">⏳</div><p>読み込み中...</p></div></div>
+    </div>
+
+    <!-- CHECK-IN -->
+    <div id="p-ci" class="pane hidden">
+      <div id="ci-idle">
+        <div class="ci-hero">
+          <div class="ci-icon">📍</div>
+          <h2>チェックイン</h2>
+          <p>朝活スポットに到着したら<br>チェックインしましょう</p>
+        </div>
+        <div class="gps-bar search" id="gps-bar">
+          <span id="gps-icon">📡</span><span id="gps-txt">位置情報を取得中...</span>
+        </div>
+        <div class="sec-title">近くのスポット</div>
+        <div id="nearby-list"><div class="empty"><div class="ei">🗺️</div><p>取得中...</p></div></div>
+        <button class="btn-ci" id="ci-btn" onclick="openModal('m-ci')" disabled>
+          <span>📍</span>スポットを選んでチェックイン
+        </button>
+      </div>
+      <div id="ci-active" class="hidden">
+        <div class="sess-card" style="margin-top:8px;">
+          <div class="sess-status"><div class="pulse"></div>朝活中</div>
+          <div class="sess-spot" id="ci-spot-name">—</div>
+          <div class="sess-timer" id="ci-timer">00:00</div>
+          <div id="ci-coatt"></div>
+          <button class="btn-out" onclick="checkOut()">チェックアウト ✓</button>
+        </div>
+        <div style="margin-top:12px;padding:12px;background:var(--bg2);border-radius:var(--r-sm);font-size:12px;color:var(--text2);line-height:1.75;">
+          💡 チェックアウト時にポイントが確定します。
+        </div>
       </div>
     </div>
 
-    <div class="card">
-      <div class="section-label">学習ステータス</div>
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-num" id="st-total">0</div><div class="stat-lbl">登録単語数</div></div>
-        <div class="stat-card"><div class="stat-num" id="st-correct">0</div><div class="stat-lbl">クイズ正答</div></div>
-        <div class="stat-card"><div class="stat-num" id="st-pct">—</div><div class="stat-lbl">正答率</div></div>
+    <!-- SPOTS -->
+    <div id="p-spots" class="pane hidden">
+      <button class="btn-add" onclick="openModal('m-spot')">＋ 新しいスポットを登録</button>
+      <div class="sec-title">グループのスポット</div>
+      <div id="spots-list"><div class="empty"><div class="ei">📍</div><p>まだスポットが登録されていません。</p></div></div>
+    </div>
+
+    <!-- RANKING -->
+    <div id="p-rank" class="pane hidden">
+      <div style="text-align:center;padding:6px 0 14px;">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:3px;">グループ内ランキング</div>
+        <div style="font-size:11px;color:var(--text3);">累計ポイント順</div>
+      </div>
+      <div id="rank-list"><div class="empty"><div class="ei">⏳</div><p>読み込み中...</p></div></div>
+      <div class="my-stats">
+        <div class="sec-title" style="margin-bottom:10px;">📊 マイ統計</div>
+        <div class="my-stats-grid">
+          <div><div class="ms-val" id="ms-pts">0</div><div class="ms-lbl">累計 pt</div></div>
+          <div><div class="ms-val" id="ms-sess">0</div><div class="ms-lbl">朝活回数</div></div>
+          <div><div class="ms-val" id="ms-time">0m</div><div class="ms-lbl">累計時間</div></div>
+        </div>
+      </div>
+      <div style="margin-top:14px;">
+        <div class="sec-title">最近の朝活</div>
+        <div id="hist-list"><div class="empty" style="padding:16px 0;"><div class="ei" style="font-size:36px;">📋</div><p>まだ記録がありません</p></div></div>
       </div>
     </div>
-  </div>
 
-  <!-- LIST TAB -->
-  <div id="tab-list" class="hidden">
-    <div class="card">
-      <div class="section-label">登録済み単語</div>
-      <div id="word-list"></div>
-    </div>
   </div>
+</div>
 
-  <!-- QUIZ TAB -->
-  <div id="tab-quiz" class="hidden">
-    <div class="card">
-      <div class="score-bar">
-        <span>問題 <span class="score-val" id="q-num">—</span></span>
-        <span>正解 <span class="score-val" id="q-score">0</span> / <span class="score-val" id="q-total">0</span></span>
-      </div>
-      <div id="quiz-body"></div>
+<!-- ████ MODALS ████ -->
+
+<!-- Checkin: spot picker -->
+<div class="overlay" id="m-ci">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">スポットを選択</div>
+    <div id="m-ci-list"></div>
+    <div style="height:10px;"></div>
+    <button class="btn btn-s" onclick="closeModal('m-ci')">キャンセル</button>
+  </div>
+</div>
+
+<!-- Add spot -->
+<div class="overlay" id="m-spot">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">スポットを登録</div>
+    <div class="ig">
+      <label class="lbl">スポット名</label>
+      <input type="text" id="spot-name-inp" class="inp" placeholder="例：スタバ渋谷、代々木公園" maxlength="40">
     </div>
+    <div class="gps-bar search" id="m-gps-bar">
+      <span id="m-gps-icon">📡</span><span id="m-gps-txt">位置情報を取得中...</span>
+    </div>
+    <div id="m-coords" style="font-size:11px;color:var(--text2);margin-bottom:14px;"></div>
+    <button class="btn btn-p" id="save-spot-btn" onclick="saveSpot()" disabled>スポットを登録する</button>
+    <div style="height:10px;"></div>
+    <button class="btn btn-s" onclick="closeModal('m-spot')">キャンセル</button>
+  </div>
+</div>
+
+<!-- Checkout summary -->
+<div class="overlay" id="m-out">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div style="text-align:center;padding:16px 0 12px;">
+      <div style="font-size:60px;margin-bottom:10px;">🎉</div>
+      <div style="font-size:30px;font-weight:800;color:var(--dawn);" id="out-pts">+0 pt</div>
+      <div style="font-size:16px;font-weight:700;margin-top:4px;" id="out-dur">—</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:4px;" id="out-spot">—</div>
+    </div>
+    <div id="out-bonus" style="margin-bottom:14px;"></div>
+    <button class="btn btn-p" onclick="closeModal('m-out')">完了</button>
+  </div>
+</div>
+
+<!-- Group code share -->
+<div class="overlay" id="m-code">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">グループコード</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:4px;">このコードを仲間に共有してください</p>
+    <div class="code-box">
+      <div class="code-lbl">グループコード</div>
+      <div class="code-val" id="code-display">——</div>
+      <div class="code-hint">仲間はこのコードで参加できます</div>
+    </div>
+    <button class="btn btn-p" id="copy-code-btn" onclick="copyCode()">コードをコピー</button>
+    <div style="height:10px;"></div>
+    <button class="btn btn-s" onclick="closeModal('m-code')">閉じる</button>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
+<!-- ████ SCRIPT ████ -->
 <script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, query, where, onSnapshot, addDoc, serverTimestamp, orderBy } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+import { initializeApp }            from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+import { getAuth, signInAnonymously, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+import {
+  getFirestore,
+  doc, setDoc, getDoc, updateDoc,
+  collection, addDoc, getDocs,
+  query, where, orderBy, limit,
+  serverTimestamp, Timestamp
+} from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-// --- Firebase Init ---
-async function loadFirebaseConfig() {
-  try {
-    const res = await fetch('/__/firebase/init.json');
-    if (res.ok) return await res.json();
-  } catch(e) {}
-  return {
-    authDomain: "growth-point-app-2026.firebaseapp.com",
-    projectId: "growth-point-app-2026"
-  };
-}
+// ── Firebase ──
+const FB = {
+  apiKey: "AIzaSyDpWTJfNtgxfz382k36gJq7ApjxWTK3c2U",
+  authDomain: "growth-point-app-2026.firebaseapp.com",
+  projectId: "growth-point-app-2026",
+  storageBucket: "growth-point-app-2026.firebasestorage.app",
+  messagingSenderId: "882027644397",
+  appId: "1:882027644397:web:dab4e5493f3a6c73ecd3e4"
+};
+const fbApp = initializeApp(FB);
+const auth  = getAuth(fbApp);
+const db    = getFirestore(fbApp);
 
-const config = await loadFirebaseConfig();
-const app = initializeApp(config);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const googleProvider = new GoogleAuthProvider();
+// ── State ──
+let uid = null;
+let me = null;          // user profile from Firestore
+let grp = null;         // group doc
+let members = [];       // all group member profiles
+let spots = [];         // group spots
+let sess = null;        // active session { id, spotId, spotName, startTime: Date }
+let timerRef = null;
+let gpsLat = null, gpsLng = null;
+let pendingLat = null, pendingLng = null;
+let pendingNick = '';
+let pendingAv = '🦊';
 
-let currentUser = null;
-let words = [];
-let stats = { correct: 0, total: 0 };
-let pendingWord = null;
-let quizState = {};
+const AVATARS = ['🦊','🐻','🐼','🐨','🐸','🦁','🐯','🦝','🦔','🐧','🦅','🐙'];
 
-// --- Auth ---
-document.getElementById('btn-login').onclick = () => signInWithPopup(auth, googleProvider);
-
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    currentUser = user;
-    document.getElementById('login-screen').classList.add('hidden');
-    document.getElementById('main-app').classList.remove('hidden');
-    syncData();
-  } else {
-    document.getElementById('login-screen').classList.remove('hidden');
-    document.getElementById('main-app').classList.add('hidden');
-  }
+// ── Auth bootstrap ──
+onAuthStateChanged(auth, async user => {
+  if (user) { uid = user.uid; await boot(); }
+  else { await signInAnonymously(auth); }
 });
 
-// --- Data Sync ---
-function syncData() {
-  if (!currentUser) return;
+async function boot() {
+  const snap = await getDoc(doc(db, 'asakatsu_users', uid));
+  if (!snap.exists()) {
+    initOb(); goStep(1); show('onboarding');
+  } else {
+    me = snap.data();
+    if (!me.groupId) { initOb(); goStep(3); show('onboarding'); }
+    else { await loadApp(); show('app'); }
+  }
+}
 
-  // Sync Profiles (Stats)
-  const profileRef = doc(db, 'profiles', currentUser.uid);
-  onSnapshot(profileRef, (snap) => {
-    if (snap.exists()) {
-      const d = snap.data();
-      stats.correct = d.quiz_correct || 0;
-      stats.total = d.quiz_total || 0;
-      updateStatsUI();
-    }
+function show(name) {
+  document.getElementById('onboarding').classList.toggle('hidden', name !== 'onboarding');
+  document.getElementById('app').classList.toggle('hidden', name !== 'app');
+}
+
+// ── Onboarding ──
+function initOb() {
+  const grid = document.getElementById('av-grid');
+  grid.innerHTML = AVATARS.map(a =>
+    `<button class="avatar-btn${a===pendingAv?' sel':''}" onclick="selAv('${a}')">${a}</button>`
+  ).join('');
+  document.getElementById('nick-inp').addEventListener('input', e => {
+    pendingNick = e.target.value.trim();
+    document.getElementById('ob2-next').disabled = !pendingNick;
   });
-
-  // Sync Vocab List
-  const q = query(collection(db, 'vocab_list'), where('user_id', '==', currentUser.uid), orderBy('addedAt', 'desc'));
-  onSnapshot(q, (snap) => {
-    words = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    updateStatsUI();
-    if (!document.getElementById('tab-list').classList.contains('hidden')) renderList();
+  document.getElementById('join-inp').addEventListener('input', e => {
+    e.target.value = e.target.value.toUpperCase();
+    document.getElementById('join-btn').disabled = e.target.value.trim().length !== 6;
+  });
+  document.getElementById('grp-name').addEventListener('input', e => {
+    document.getElementById('create-btn').disabled = !e.target.value.trim();
   });
 }
 
-function updateStatsUI() {
-  document.getElementById('st-total').textContent = words.length;
-  document.getElementById('st-correct').textContent = stats.correct;
-  document.getElementById('st-pct').textContent = stats.total > 0
-    ? Math.round(stats.correct / stats.total * 100) + '%' : '—';
-}
-
-// --- UI Actions ---
-window.switchTab = (tab) => {
-  ['add','list','quiz'].forEach(t => {
-    const el = document.getElementById('tab-'+t);
-    const nav = document.getElementById('nav-'+t);
-    if (t === tab) { el.classList.remove('hidden'); nav.classList.add('active'); }
-    else { el.classList.add('hidden'); nav.classList.remove('active'); }
-  });
-  if (tab === 'list') renderList();
-  if (tab === 'quiz') startQuiz();
+window.goStep = n => {
+  [1,2,3].forEach(i =>
+    document.getElementById(`ob${i}`).classList.toggle('hidden', i !== n)
+  );
+};
+window.selAv = emoji => {
+  pendingAv = emoji;
+  document.querySelectorAll('.avatar-btn').forEach(b =>
+    b.classList.toggle('sel', b.textContent === emoji)
+  );
+};
+window.showCreate = () => {
+  document.getElementById('grp-choice').classList.add('hidden');
+  document.getElementById('grp-create').classList.remove('hidden');
+};
+window.hideCreate = () => {
+  document.getElementById('grp-create').classList.add('hidden');
+  document.getElementById('grp-choice').classList.remove('hidden');
 };
 
-window.showToast = (msg) => {
+window.submitProfile = async () => {
+  if (!pendingNick) return;
+  const btn = document.getElementById('ob2-next');
+  btn.disabled = true; btn.textContent = '保存中...';
+  await setDoc(doc(db, 'asakatsu_users', uid), {
+    nickname: pendingNick, avatar: pendingAv,
+    groupId: null, totalPoints: 0, sessionCount: 0, totalMinutes: 0,
+    createdAt: serverTimestamp()
+  });
+  me = { nickname: pendingNick, avatar: pendingAv, groupId: null, totalPoints: 0, sessionCount: 0, totalMinutes: 0 };
+  goStep(3);
+  btn.textContent = '次へ →';
+};
+
+window.createGroup = async () => {
+  const name = document.getElementById('grp-name').value.trim();
+  if (!name) return;
+  const btn = document.getElementById('create-btn');
+  btn.disabled = true; btn.textContent = '作成中...';
+  const code = genCode();
+  const ref  = doc(collection(db, 'asakatsu_groups'));
+  await setDoc(ref, { name, code, memberIds: [uid], createdBy: uid, createdAt: serverTimestamp() });
+  await updateDoc(doc(db, 'asakatsu_users', uid), { groupId: ref.id });
+  me.groupId = ref.id;
+  await loadApp();
+  show('app');
+  // Show the group code immediately
+  document.getElementById('code-display').textContent = code;
+  openModal('m-code');
+};
+
+window.joinGroup = async () => {
+  const code = document.getElementById('join-inp').value.trim().toUpperCase();
+  if (code.length !== 6) return;
+  const btn = document.getElementById('join-btn');
+  btn.disabled = true; btn.textContent = '参加中...';
+  const q = query(collection(db, 'asakatsu_groups'), where('code', '==', code));
+  const snap = await getDocs(q);
+  if (snap.empty) {
+    toast('グループが見つかりません。コードを確認してください');
+    btn.disabled = false; btn.textContent = 'コードで参加する'; return;
+  }
+  const gDoc = snap.docs[0];
+  const ids  = gDoc.data().memberIds || [];
+  if (!ids.includes(uid)) await updateDoc(gDoc.ref, { memberIds: [...ids, uid] });
+  await updateDoc(doc(db, 'asakatsu_users', uid), { groupId: gDoc.id });
+  me.groupId = gDoc.id;
+  await loadApp();
+  show('app');
+};
+
+function genCode() {
+  const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({length:6}, () => c[Math.floor(Math.random()*c.length)]).join('');
+}
+
+// ── Load main app ──
+async function loadApp() {
+  // Refresh user
+  const us = await getDoc(doc(db, 'asakatsu_users', uid));
+  me = us.data();
+
+  // Load group
+  const gs = await getDoc(doc(db, 'asakatsu_groups', me.groupId));
+  grp = { id: gs.id, ...gs.data() };
+
+  // Load members
+  members = [];
+  for (const mid of grp.memberIds || []) {
+    const ms = await getDoc(doc(db, 'asakatsu_users', mid));
+    if (ms.exists()) members.push({ id: mid, ...ms.data() });
+  }
+
+  // Load spots
+  const sq = query(collection(db, 'asakatsu_spots'), where('groupId', '==', me.groupId));
+  const ss = await getDocs(sq);
+  spots = ss.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  // Restore active session
+  const aq = query(
+    collection(db, 'asakatsu_sessions'),
+    where('userId', '==', uid), where('isActive', '==', true)
+  );
+  const as = await getDocs(aq);
+  if (!as.empty) {
+    const sd = as.docs[0];
+    sess = { id: sd.id, ...sd.data(), startTime: sd.data().startTime.toDate() };
+    startTimer();
+    showSessUI();
+  }
+
+  updateTopbar();
+  renderHome();
+  renderSpots();
+  startGPS();
+}
+
+// ── Topbar ──
+function updateTopbar() {
+  document.getElementById('tb-group').textContent = `👥 ${grp?.name || ''}`;
+  document.getElementById('tb-pts').textContent   = `${(me?.totalPoints||0).toLocaleString()} pt`;
+}
+
+// ── Home ──
+async function renderHome() {
+  const h = new Date().getHours();
+  const greet = h < 5 ? '深夜もお疲れさまです 🌙'
+    : h < 10 ? 'おはようございます ☀️'
+    : h < 17 ? 'こんにちは！'
+    : 'こんばんは 🌙';
+  document.getElementById('hh-greet').textContent = greet;
+  document.getElementById('hh-pts').textContent   = (me?.totalPoints||0).toLocaleString();
+
+  // Active session banner in home
+  const homeSess = document.getElementById('home-sess');
+  if (sess) {
+    homeSess.innerHTML = `
+      <div class="sess-card">
+        <div class="sess-status"><div class="pulse"></div>朝活中</div>
+        <div class="sess-spot">${esc(sess.spotName)}</div>
+        <div class="sess-timer" id="home-timer">00:00</div>
+        <button class="btn-out" onclick="checkOut()">チェックアウト</button>
+      </div>`;
+  } else {
+    homeSess.innerHTML = '';
+  }
+
+  // Today's sessions
+  const today = new Date(); today.setHours(0,0,0,0);
+  const tq = query(
+    collection(db, 'asakatsu_sessions'),
+    where('groupId','==', me.groupId),
+    where('startTime','>=', Timestamp.fromDate(today)),
+    orderBy('startTime','desc')
+  );
+  const ts = await getDocs(tq);
+  const todaySess = ts.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  let activeCount = 0;
+  const feed = document.getElementById('member-feed');
+  feed.innerHTML = '';
+
+  members.forEach(m => {
+    const mSess  = todaySess.filter(s => s.userId === m.id);
+    const active = mSess.find(s => s.isActive);
+    const done   = mSess.filter(s => !s.isActive);
+    const mins   = done.reduce((a,s) => a + (s.durationMinutes||0), 0);
+    if (active) activeCount++;
+
+    const card = document.createElement('div');
+    card.className = `member-row${active?' on':''}`;
+    let statusHtml = active
+      ? `<div class="m-status on"><div class="pulse" style="width:6px;height:6px;margin:0;"></div>${esc(active.spotName)}で朝活中</div>`
+      : done.length
+        ? `<div class="m-status">今日 ${mins}分の朝活 ✓</div>`
+        : `<div class="m-status">まだ</div>`;
+    const isMe = m.id === uid;
+    card.innerHTML = `
+      <div class="av">${m.avatar||'🦊'}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="m-name">${esc(m.nickname||'—')}${isMe?' <span style="font-size:10px;color:var(--text3);">(あなた)</span>':''}</div>
+        ${statusHtml}
+      </div>
+      <div class="m-pts">
+        <span class="m-pts-val">${(m.totalPoints||0).toLocaleString()}</span>
+        <span class="m-pts-lbl">pt</span>
+      </div>`;
+    feed.appendChild(card);
+  });
+
+  document.getElementById('act-cnt').textContent = `${activeCount}人`;
+}
+
+// ── GPS ──
+function startGPS() {
+  if (!navigator.geolocation) {
+    setGPS('err','位置情報未対応のブラウザです');
+    document.getElementById('ci-btn').disabled = false; return;
+  }
+  setGPS('search','位置情報を取得中...');
+  navigator.geolocation.getCurrentPosition(
+    p => {
+      gpsLat = p.coords.latitude; gpsLng = p.coords.longitude;
+      setGPS('ok','位置情報取得済み');
+      document.getElementById('ci-btn').disabled = false;
+      detectNearby();
+    },
+    () => {
+      setGPS('err','位置情報が取得できません。手動で選択してください');
+      document.getElementById('ci-btn').disabled = false;
+      renderNearby([]);
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+function setGPS(type, txt) {
+  const el = document.getElementById('gps-bar');
+  const icons = { ok:'✅', search:'📡', err:'⚠️' };
+  el.className = `gps-bar ${type}`;
+  document.getElementById('gps-icon').textContent = icons[type];
+  document.getElementById('gps-txt').textContent  = txt;
+}
+
+function detectNearby() {
+  if (!gpsLat) return renderNearby([]);
+  const near = spots.map(s => ({ ...s, dist: dist(gpsLat, gpsLng, s.lat, s.lng) }))
+    .filter(s => s.dist <= 500).sort((a,b) => a.dist - b.dist);
+  renderNearby(near);
+}
+
+function renderNearby(list) {
+  const el = document.getElementById('nearby-list');
+  if (!list.length) {
+    el.innerHTML = `<div class="empty" style="padding:14px 0;"><div class="ei" style="font-size:36px;">📍</div><p style="font-size:12px;">近くに登録済みスポットがありません。<br>「スポット」タブから登録してください。</p></div>`;
+    return;
+  }
+  el.innerHTML = list.map(s => `
+    <div class="nearby-spot" onclick="doCheckin('${s.id}','${esc(s.name)}')">
+      <div class="ns-icon">📍</div>
+      <div><div class="ns-name">${esc(s.name)}</div><div class="ns-dist">${fmtDist(s.dist)}</div></div>
+      <div class="ns-arr">→</div>
+    </div>`).join('');
+}
+
+// ── Check-in modal opener ──
+window.openModal = id => {
+  if (id === 'm-ci') {
+    const el = document.getElementById('m-ci-list');
+    if (!spots.length) {
+      el.innerHTML = `<p style="text-align:center;color:var(--text2);padding:20px;font-size:13px;">スポットがまだ登録されていません。<br>先にスポットタブから登録してください。</p>`;
+    } else {
+      el.innerHTML = spots.map(s => `
+        <div class="nearby-spot" onclick="doCheckin('${s.id}','${esc(s.name)}');closeModal('m-ci');">
+          <div class="ns-icon">📍</div>
+          <div><div class="ns-name">${esc(s.name)}</div><div class="ns-dist">${s.visitCount||0}回訪問</div></div>
+          <div class="ns-arr">→</div>
+        </div>`).join('');
+    }
+  }
+  if (id === 'm-spot') {
+    document.getElementById('spot-name-inp').value = '';
+    document.getElementById('save-spot-btn').disabled = true;
+    pendingLat = gpsLat; pendingLng = gpsLng;
+    if (gpsLat) {
+      setModalGPS('ok','現在地を取得済み');
+      document.getElementById('m-coords').textContent = `${gpsLat.toFixed(5)}, ${gpsLng.toFixed(5)}`;
+      updateSaveBtn();
+    } else {
+      setModalGPS('search','位置情報を取得中...');
+      navigator.geolocation?.getCurrentPosition(p => {
+        pendingLat = p.coords.latitude; pendingLng = p.coords.longitude;
+        setModalGPS('ok','現在地を取得済み');
+        document.getElementById('m-coords').textContent = `${pendingLat.toFixed(5)}, ${pendingLng.toFixed(5)}`;
+        updateSaveBtn();
+      });
+    }
+    // watch name input
+    const ni = document.getElementById('spot-name-inp');
+    ni.oninput = updateSaveBtn;
+  }
+  document.getElementById(id).classList.add('open');
+};
+window.closeModal = id => document.getElementById(id).classList.remove('open');
+
+function updateSaveBtn() {
+  const hasName = document.getElementById('spot-name-inp').value.trim().length > 0;
+  document.getElementById('save-spot-btn').disabled = !hasName;
+}
+function setModalGPS(type, txt) {
+  const el = document.getElementById('m-gps-bar');
+  const icons = { ok:'✅', search:'📡', err:'⚠️' };
+  el.className = `gps-bar ${type}`;
+  document.getElementById('m-gps-icon').textContent = icons[type];
+  document.getElementById('m-gps-txt').textContent  = txt;
+}
+
+// ── Check-in ──
+window.doCheckin = async (spotId, spotName) => {
+  if (sess) { toast('すでにチェックイン済みです'); return; }
+  const startTime = new Date();
+  const ref = doc(collection(db, 'asakatsu_sessions'));
+  await setDoc(ref, {
+    userId: uid, spotId, spotName,
+    groupId: me.groupId,
+    startTime: Timestamp.fromDate(startTime),
+    endTime: null, isActive: true,
+    durationMinutes: 0, points: 0, coAttendees: [],
+    createdAt: serverTimestamp()
+  });
+  // bump spot visit count
+  const sRef = doc(db, 'asakatsu_spots', spotId);
+  const sSnap = await getDoc(sRef);
+  if (sSnap.exists()) await updateDoc(sRef, { visitCount: (sSnap.data().visitCount||0)+1 });
+
+  sess = { id: ref.id, spotId, spotName, startTime };
+  startTimer();
+  showSessUI();
+  renderHome();
+  toast(`${spotName}でチェックイン！`);
+};
+
+function showSessUI() {
+  document.getElementById('ci-spot-name').textContent = sess.spotName;
+  document.getElementById('ci-idle').classList.add('hidden');
+  document.getElementById('ci-active').classList.remove('hidden');
+}
+function hideSessUI() {
+  document.getElementById('ci-idle').classList.remove('hidden');
+  document.getElementById('ci-active').classList.add('hidden');
+}
+
+// ── Timer ──
+function startTimer() {
+  if (timerRef) clearInterval(timerRef);
+  tick();
+  timerRef = setInterval(tick, 1000);
+}
+function tick() {
+  if (!sess) return;
+  const elapsed = Math.floor((Date.now() - sess.startTime.getTime()) / 1000);
+  const h = Math.floor(elapsed/3600), m = Math.floor((elapsed%3600)/60), s = elapsed%60;
+  const str = h ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+  document.getElementById('ci-timer').textContent = str;
+  const ht = document.getElementById('home-timer');
+  if (ht) ht.textContent = str;
+  if (elapsed % 30 === 0) pollCoAttendees();
+}
+
+async function pollCoAttendees() {
+  if (!sess) return;
+  const q = query(collection(db,'asakatsu_sessions'), where('spotId','==',sess.spotId), where('isActive','==',true));
+  const snap = await getDocs(q);
+  const others = snap.docs.filter(d => d.data().userId !== uid);
+  const coEl = document.getElementById('ci-coatt');
+  if (others.length) {
+    const ids = others.map(d => d.data().userId);
+    const names = members.filter(m => ids.includes(m.id)).map(m => m.avatar+m.nickname);
+    if (names.length) {
+      coEl.innerHTML = `<div class="coatt">👥 同席中: ${names.join('、')}</div>`;
+      return;
+    }
+  }
+  coEl.innerHTML = '';
+}
+
+// ── Check-out ──
+window.checkOut = async () => {
+  if (!sess) return;
+  const endTime = new Date();
+  const mins = Math.floor((endTime - sess.startTime) / 60000);
+
+  if (mins < 20) {
+    if (!confirm(`滞在 ${mins} 分です。20分未満はポイント無効ですがチェックアウトしますか？`)) return;
+  }
+
+  const pts = calcPoints(mins, sess.startTime);
+
+  await updateDoc(doc(db,'asakatsu_sessions', sess.id), {
+    endTime: Timestamp.fromDate(endTime),
+    isActive: false,
+    durationMinutes: mins,
+    points: pts.total
+  });
+  await updateDoc(doc(db,'asakatsu_users', uid), {
+    totalPoints:  (me.totalPoints||0)  + pts.total,
+    sessionCount: (me.sessionCount||0) + 1,
+    totalMinutes: (me.totalMinutes||0) + mins
+  });
+  me.totalPoints  = (me.totalPoints||0)  + pts.total;
+  me.sessionCount = (me.sessionCount||0) + 1;
+  me.totalMinutes = (me.totalMinutes||0) + mins;
+
+  // Show summary modal
+  document.getElementById('out-pts').textContent  = `+${pts.total} pt`;
+  document.getElementById('out-dur').textContent  = `${mins}分の朝活`;
+  document.getElementById('out-spot').textContent = sess.spotName;
+  const bonusEl = document.getElementById('out-bonus');
+  bonusEl.innerHTML = pts.bonuses.length
+    ? `<div style="background:var(--bg2);border-radius:var(--r-sm);padding:12px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;">ボーナス内訳</div>
+        ${pts.bonuses.map(b=>`<div style="font-size:12px;display:flex;justify-content:space-between;margin-bottom:4px;"><span>${b.label}</span><span style="color:var(--dawn);font-weight:700;">${b.value}</span></div>`).join('')}
+      </div>` : '';
+
+  openModal('m-out');
+
+  if (timerRef) { clearInterval(timerRef); timerRef = null; }
+  sess = null;
+  hideSessUI();
+  updateTopbar();
+  renderHome();
+};
+
+function calcPoints(mins, startTime) {
+  if (mins < 20) return { total: 0, bonuses: [] };
+  const base = mins;
+  const bonuses = [{ label: `滞在時間 ${mins}分`, value: `${base}pt` }];
+  let total = base;
+  const h = startTime.getHours();
+  if (h < 6) { total += 20; bonuses.push({ label: '早起きボーナス（6時前）', value: '+20pt' }); }
+  if (h >= 6 && h < 8) { total += 10; bonuses.push({ label: '早起きボーナス（8時前）', value: '+10pt' }); }
+  return { total, bonuses };
+}
+
+// ── Spots ──
+function renderSpots() {
+  const el = document.getElementById('spots-list');
+  if (!spots.length) {
+    el.innerHTML = `<div class="empty"><div class="ei">📍</div><p>まだスポットが登録されていません。<br>上のボタンから追加しましょう！</p></div>`;
+    return;
+  }
+  el.innerHTML = spots.map(s => `
+    <div class="spot-card">
+      <div class="spot-head">
+        <div class="spot-big">📍</div>
+        <div>
+          <div class="spot-name">${esc(s.name)}</div>
+          <div class="spot-sub">${s.lat ? `${s.lat.toFixed(4)}, ${s.lng.toFixed(4)}` : '位置情報なし'}</div>
+        </div>
+      </div>
+      <div class="spot-stats">
+        <div class="sstat"><strong>${s.visitCount||0}</strong>回訪問</div>
+        <div class="sstat"><strong>${s.radius||100}m</strong>検知範囲</div>
+      </div>
+    </div>`).join('');
+}
+
+window.saveSpot = async () => {
+  const name = document.getElementById('spot-name-inp').value.trim();
+  if (!name) return;
+  const btn = document.getElementById('save-spot-btn');
+  btn.disabled = true; btn.textContent = '登録中...';
+  const ref = doc(collection(db,'asakatsu_spots'));
+  const data = { name, lat: pendingLat, lng: pendingLng, radius: 100, groupId: me.groupId, createdBy: uid, visitCount: 0, createdAt: serverTimestamp() };
+  await setDoc(ref, data);
+  spots.push({ id: ref.id, ...data });
+  closeModal('m-spot');
+  renderSpots();
+  detectNearby();
+  toast(`${name}を登録しました！`);
+  btn.disabled = false; btn.textContent = 'スポットを登録する';
+};
+
+// ── Ranking ──
+async function renderRanking() {
+  // Refresh members
+  members = [];
+  for (const mid of grp.memberIds||[]) {
+    const ms = await getDoc(doc(db,'asakatsu_users', mid));
+    if (ms.exists()) members.push({ id: mid, ...ms.data() });
+  }
+  const sorted = [...members].sort((a,b) => (b.totalPoints||0)-(a.totalPoints||0));
+  const medals = ['🥇','🥈','🥉'];
+  const mcls   = ['g','s','b'];
+  document.getElementById('rank-list').innerHTML = sorted.map((m,i) => `
+    <div class="rank-row${m.id===uid?' me':''}">
+      <div class="rank-n ${mcls[i]||''}">${medals[i]||i+1}</div>
+      <div class="av" style="width:34px;height:34px;font-size:18px;">${m.avatar||'🦊'}</div>
+      <div class="rank-name">${esc(m.nickname||'—')}${m.id===uid?' 👤':''}</div>
+      <div class="rank-pts">${(m.totalPoints||0).toLocaleString()} <span>pt</span></div>
+    </div>`).join('');
+
+  const myData = members.find(m => m.id === uid);
+  if (myData) {
+    document.getElementById('ms-pts').textContent  = (myData.totalPoints||0).toLocaleString();
+    document.getElementById('ms-sess').textContent = myData.sessionCount||0;
+    const th = Math.floor((myData.totalMinutes||0)/60);
+    const tm = (myData.totalMinutes||0) % 60;
+    document.getElementById('ms-time').textContent = th ? `${th}h${tm}m` : `${tm}m`;
+  }
+  renderHistory();
+}
+
+async function renderHistory() {
+  const q = query(
+    collection(db,'asakatsu_sessions'),
+    where('userId','==',uid), where('isActive','==',false),
+    orderBy('endTime','desc'), limit(10)
+  );
+  const snap = await getDocs(q);
+  const el = document.getElementById('hist-list');
+  if (snap.empty) {
+    el.innerHTML = `<div class="empty" style="padding:14px 0;"><div class="ei" style="font-size:36px;">📋</div><p>まだ記録がありません</p></div>`;
+    return;
+  }
+  el.innerHTML = snap.docs.map(d => {
+    const s = d.data();
+    const dt = s.startTime?.toDate() || new Date();
+    const dstr = dt.toLocaleDateString('ja-JP',{month:'numeric',day:'numeric',weekday:'short'});
+    const tstr = dt.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+    return `<div class="hist-item">
+      <div class="hi-icon">📍</div>
+      <div><div class="hi-spot">${esc(s.spotName||'スポット')}</div><div class="hi-meta">${dstr} ${tstr} · ${s.durationMinutes||0}分</div></div>
+      <div class="hi-pts">+${s.points||0}pt</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Tabs ──
+window.tab = name => {
+  ['home','ci','spots','rank'].forEach(t => {
+    document.getElementById(`p-${t}`).classList.toggle('hidden', t !== name);
+    document.getElementById(`t-${t}`).classList.toggle('active', t === name);
+  });
+  if (name === 'rank')  renderRanking();
+  if (name === 'ci')    { startGPS(); detectNearby(); if (sess) showSessUI(); }
+  if (name === 'spots') renderSpots();
+};
+
+// ── Group code share ──
+window.copyCode = async () => {
+  const code = document.getElementById('code-display').textContent;
+  try { await navigator.clipboard.writeText(code); toast('コードをコピーしました！'); }
+  catch { toast(`グループコード: ${code}`); }
+};
+
+// expose group code button from topbar (tap group name)
+document.getElementById('tb-group').addEventListener('click', () => {
+  if (!grp?.code) return;
+  document.getElementById('code-display').textContent = grp.code;
+  openModal('m-code');
+});
+
+// modal close on backdrop click
+document.querySelectorAll('.overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+// ── Toast ──
+window.toast = msg => {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
+  setTimeout(() => t.classList.remove('show'), 2600);
 };
 
-// --- AI Generation ---
-window.generateWord = async () => {
-  const input = document.getElementById('word-input');
-  const word = input.value.trim();
-  if (!word) return;
-
-  const btn = document.getElementById('gen-btn');
-  btn.disabled = true;
-  document.getElementById('ai-preview').classList.remove('visible');
-  const status = document.getElementById('gen-status');
-  status.innerHTML = '<div class="dot-loader"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>&nbsp;AIが意味と例文を生成中...';
-
-  try {
-    const formData = new FormData();
-    formData.append('word', word);
-    
-    const res = await fetch('/api/generate-vocab', {
-      method: 'POST',
-      body: formData
-    });
-
-    if (!res.ok) throw new Error('API error');
-    const parsed = await res.json();
-
-    pendingWord = parsed;
-    document.getElementById('prev-word').textContent = parsed.word;
-    document.getElementById('prev-meaning').textContent = parsed.meaning;
-    document.getElementById('prev-example').textContent =
-      '"' + parsed.example + '" — ' + parsed.example_ja;
-    document.getElementById('ai-preview').classList.add('visible');
-    status.textContent = '';
-  } catch(e) {
-    status.textContent = '⚠ 生成に失敗しました。時間をおいて再度お試しください。';
-    console.error(e);
-  }
-  btn.disabled = false;
-};
-
-window.saveWord = async () => {
-  if (!pendingWord || !currentUser) return;
-  const exists = words.some(w => w.word.toLowerCase() === pendingWord.word.toLowerCase());
-  if (exists) { showToast('この単語はすでに登録されています'); return; }
-
-  const btn = document.getElementById('save-btn');
-  btn.disabled = true;
-
-  try {
-    await addDoc(collection(db, 'vocab_list'), {
-      ...pendingWord,
-      user_id: currentUser.uid,
-      addedAt: serverTimestamp()
-    });
-
-    document.getElementById('ai-preview').classList.remove('visible');
-    document.getElementById('word-input').value = '';
-    showToast('✓ 保存しました！');
-  } catch(e) {
-    showToast('❌ 保存に失敗しました');
-  }
-  btn.disabled = false;
-  pendingWord = null;
-};
-
-// --- List Render ---
-function renderList() {
-  const el = document.getElementById('word-list');
-  if (words.length === 0) {
-    el.innerHTML = '<div class="empty">まだ単語が登録されていません。<br>「単語を登録」タブから追加してみましょう。</div>';
-    return;
-  }
-  el.innerHTML = words.map((w, i) => `
-    <div class="word-item">
-      <div class="word-num">${i + 1}</div>
-      <div class="word-body">
-        <div class="word-en">${escapeHtml(w.word)}</div>
-        <div class="word-jp">${escapeHtml(w.meaning)}</div>
-        <div class="word-ex">"${escapeHtml(w.example)}"</div>
-      </div>
-    </div>
-  `).join('');
+// ── Helpers ──
+function pad(n) { return String(n).padStart(2,'0'); }
+function dist(la1,lo1,la2,lo2) {
+  if (!la2) return Infinity;
+  const R=6371000, dLa=(la2-la1)*Math.PI/180, dLo=(lo2-lo1)*Math.PI/180;
+  const a = Math.sin(dLa/2)**2 + Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dLo/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
-
-function escapeHtml(s) {
+function fmtDist(m) { return m<1000 ? `${Math.round(m)}m` : `${(m/1000).toFixed(1)}km`; }
+function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
-// --- Quiz Logic ---
-function startQuiz() {
-  const body = document.getElementById('quiz-body');
-  if (words.length < 4) {
-    body.innerHTML = `<div class="empty">クイズには最低4単語の登録が必要です。<br>あと${4 - words.length}単語登録してみましょう！</div>`;
-    document.getElementById('q-num').textContent = '—';
-    return;
-  }
-  quizState = { score: 0, total: 0, answered: false };
-  document.getElementById('q-score').textContent = '0';
-  document.getElementById('q-total').textContent = '0';
-  nextQuestion();
-}
-
-window.nextQuestion = () => {
-  quizState.answered = false;
-  const shuffled = [...words].sort(() => Math.random() - 0.5);
-  const correct = shuffled[0];
-  const choices = shuffled.slice(0, 4).sort(() => Math.random() - 0.5);
-  quizState.correct = correct;
-  quizState.total++;
-  document.getElementById('q-num').textContent = quizState.total;
-
-  document.getElementById('quiz-body').innerHTML = `
-    <div class="quiz-hint">次の単語の正しい意味はどれ？</div>
-    <div class="quiz-word">${escapeHtml(correct.word)}</div>
-    <div class="quiz-options" id="quiz-opts">
-      ${choices.map(c => `
-        <button class="quiz-opt" onclick="answerQuiz(this, '${escapeHtml(c.word)}')">
-          ${escapeHtml(c.meaning)}
-        </button>
-      `).join('')}
-    </div>
-    <div class="quiz-result" id="quiz-result"></div>
-    <button class="quiz-next" id="quiz-next" onclick="nextQuestion()">次の問題へ →</button>
-  `;
-};
-
-window.answerQuiz = async (btn, selectedWord) => {
-  if (quizState.answered) return;
-  quizState.answered = true;
-
-  document.querySelectorAll('.quiz-opt').forEach(b => b.disabled = true);
-  const isCorrect = selectedWord === quizState.correct.word;
-  btn.classList.add(isCorrect ? 'correct' : 'wrong');
-
-  if (!isCorrect) {
-    document.querySelectorAll('.quiz-opt').forEach(b => {
-      if (b.textContent.trim() === quizState.correct.meaning.trim()) {
-        b.classList.add('correct');
-      }
-    });
-  }
-
-  if (isCorrect) quizState.score++;
-  
-  // Update Firestore Stats
-  const profileRef = doc(db, 'profiles', currentUser.uid);
-  const snap = await getDoc(profileRef);
-  const currentCorrect = (snap.exists() ? snap.data().quiz_correct : 0) || 0;
-  const currentTotal = (snap.exists() ? snap.data().quiz_total : 0) || 0;
-  
-  await setDoc(profileRef, {
-    quiz_correct: currentCorrect + (isCorrect ? 1 : 0),
-    quiz_total: currentTotal + 1,
-    last_active: serverTimestamp()
-  }, { merge: true });
-
-  document.getElementById('q-score').textContent = quizState.score;
-  document.getElementById('q-total').textContent = quizState.total;
-  document.getElementById('quiz-result').textContent = isCorrect
-    ? '🎉 正解！'
-    : '❌ 不正解 — 正しくは「' + quizState.correct.meaning + '」';
-  document.getElementById('quiz-next').classList.add('visible');
-};
 </script>
 </body>
 </html>
